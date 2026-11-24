@@ -1,147 +1,49 @@
-
-<!DOCTYPE html>
-<html lang="hi">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sagar Sweets Product Master</title>
+<!doctype html>
+<html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sagar Sweets Stock</title>
 <style>
-body{font-family:Arial;background:#f4f4f4;margin:0}
-header{background:#7b1828;color:white;text-align:center;padding:20px}
-main{max-width:600px;margin:auto;padding:15px}
-.card{background:white;padding:18px;margin:15px 0;border-radius:12px}
-input,select,button{width:100%;padding:13px;margin:8px 0;box-sizing:border-box;border:1px solid #ccc;border-radius:7px;font-size:16px}
-button{background:#7b1828;color:white;border:0;font-weight:bold}
-.item{padding:12px;border-bottom:1px solid #ddd}
-.small{width:auto;padding:8px;margin-right:5px}
+*{box-sizing:border-box}body{margin:0;background:#f3f5f9;color:#172033;font:15px system-ui,-apple-system,Segoe UI,sans-serif}header{background:#172b55;color:white;padding:16px}header h1{font-size:21px;margin:0}header small{color:#dce5fa}nav{display:flex;gap:6px;overflow:auto;background:white;padding:9px;position:sticky;top:0;z-index:2}button{border:0;border-radius:9px;padding:10px;background:#e9eef9;color:#172b55;font-weight:650;white-space:nowrap}button.active,.save{background:#2457d6;color:white}.save{width:100%;margin-top:12px}main{max-width:900px;margin:auto;padding:12px}.tab{display:none}.tab.active{display:block}.card{background:white;border:1px solid #e0e5ee;border-radius:13px;padding:14px;margin-bottom:12px}h2{font-size:18px;margin:0 0 12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.full{grid-column:1/-1}label{display:block;color:#687386;font-size:13px;margin-bottom:5px}input,select{width:100%;padding:11px;border:1px solid #ccd4e2;border-radius:8px;background:white;font-size:15px} .note{font-size:12px;color:#687386}.wrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:620px}td,th{padding:9px;border-bottom:1px solid #e4e8f0;text-align:left;font-size:13px}th{color:#687386;background:#fafbfc}.del{background:#ffeded;color:#a22}#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px;background:#f3f5f9}#loginCard{width:100%;max-width:420px;background:white;border:1px solid #e0e5ee;border-radius:16px;padding:22px;box-shadow:0 8px 30px #15264a12}#loginCard h1{margin:0 0 5px;color:#172b55}#loginCard input{margin:6px 0 12px}#loginMsg{font-size:13px;color:#b42318;min-height:20px}.hidden{display:none!important}#app{display:none}.topline{display:flex;align-items:center;justify-content:space-between;gap:8px}.topline button{background:#ffffff22;color:white;border:1px solid #ffffff55}
 </style>
-</head>
-<body>
-<header>
-<h2>SAGAR SWEETS</h2>
-<p>Product Master</p>
-</header>
+</head><body>
+<div id="loginScreen"><div id="loginCard"><h1>🍬 SAGAR SWEETS</h1><p>Stock App Login</p><label>Admin Email</label><input id="email" type="email" autocomplete="username" placeholder="आपका Firebase Admin email"><label>Password</label><input id="password" type="password" autocomplete="current-password" placeholder="Password"><button class="save" id="loginBtn">Login</button><div id="loginMsg"></div><p class="note">हर बार ऐप खोलने पर Password डालना होगा। केवल अधिकृत Admin Login कर सकेगा।</p></div></div>
+<div id="app"><header><div class="topline"><div><h1>🍬 SAGAR SWEETS</h1><small>Stock In • Stock Out • Stock Report</small></div><button id="logoutBtn">Logout</button></div></header>
+<nav><button class="active" data-tab="in">Stock In</button><button data-tab="out">Stock Out</button><button data-tab="master">Product Master</button><button data-tab="report">Stock Report</button><button data-tab="history">History</button></nav>
 <main>
-<div class="card" id="login">
-<h3>Admin Login (Demo)</h3>
-<input id="username" placeholder="Username">
-<input id="password" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
-</div>
-
-<div id="panel" style="display:none">
-<div class="card">
-<h3>Add New Product</h3>
-<input id="code" placeholder="Product Code">
-<input id="name" placeholder="Product Name">
-<input id="size" placeholder="Size (Example: 500 GM)">
-<select id="unit">
-<option value="KG">KG</option>
-<option value="Box">Box</option>
-<option value="PCS">PCS</option>
-</select>
-<button onclick="addProduct()">Save Product</button>
-</div>
-
-<div class="card">
-<h3>Product List</h3>
-<div id="list"></div>
-</div>
-
-<div class="card">
-<h3>Product Dropdown Test</h3>
-<select id="productSelect">
-<option value="">Select Product</option>
-</select>
-</div>
-<button onclick="logout()">Logout</button>
-</div>
-</main><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<section id="in" class="tab active"><div class="card"><h2>Stock In — Factory से माल आया</h2><div class="grid"><div><label>Date</label><input id="idate" type="date"></div><div><label>Party</label><input value="Factory" disabled></div><div><label>Product</label><select id="ip"></select></div><div><label>Size</label><select id="is"></select></div><div><label>Carton Qty</label><input id="ic" type="number" min="0" value="0"></div><div><label>Loose Box / PCS Qty</label><input id="il" type="number" min="0" value="0"></div><div class="full note" id="infoi"></div></div><button class="save" id="si">Stock In Save</button></div></section>
+<section id="out" class="tab"><div class="card"><h2>Stock Out — Branch को माल गया</h2><div class="grid"><div><label>Date</label><input id="odate" type="date"></div><div><label>Party / Branch</label><select id="oparty"></select></div><div><label>Product</label><select id="op"></select></div><div><label>Size</label><select id="os"></select></div><div><label>Carton Qty</label><input id="oc" type="number" min="0" value="0"></div><div><label>Loose Box / PCS Qty</label><input id="ol" type="number" min="0" value="0"></div><div class="full note" id="infoo"></div></div><button class="save" id="so">Stock Out Save</button></div></section>
+<section id="master" class="tab"><div class="card"><h2>Product Master</h2><div class="grid"><div class="full"><label>Product Name</label><input id="pn" placeholder="Motichoor Laddu"></div><div><label>Size</label><input id="ps" placeholder="250 GM / 500 GM / 1 KG"></div><div><label>एक Carton में Box</label><input id="pp" type="number" min="1" placeholder="70"></div></div><button class="save" id="add">Product / Size Save</button><p class="note">एक Product के कई Size अलग-अलग जोड़ें। हर Size का Carton conversion अलग रख सकते हैं।</p></div><div class="card"><h3>Products</h3><div id="plist" class="wrap"></div></div></section>
+<section id="report" class="tab"><div class="card"><h2>Stock Report — Carton के हिसाब से</h2><label>Product Filter</label><select id="filter"><option value="">सभी Product</option></select><div id="rtable" class="wrap"></div></div></section>
+<section id="history" class="tab"><div class="card"><h2>Entry History</h2><div id="htable" class="wrap"></div></div></section>
+</main></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
-let products=JSON.parse(localStorage.getItem("sagarProducts")||"[]");
-
-function login(){
-if(document.getElementById("username").value==="admin" &&
-document.getElementById("password").value==="admin123"){
-document.getElementById("login").style.display="none";
-document.getElementById("panel").style.display="block";
-render();
-}else alert("Demo Login: admin / admin123");
-}
-
-function addProduct(){
-let code=document.getElementById("code").value.trim();
-let name=document.getElementById("name").value.trim();
-let size=document.getElementById("size").value.trim();
-let unit=document.getElementById("unit").value;
-
-if(!code||!name||!size){
-alert("Sabhi details bharein");
-return;
-}
-if(products.some(p=>p.code.toLowerCase()===code.toLowerCase())){
-alert("Product Code already exists");
-return;
-}
-products.push({code,name,size,unit});
-save();
-document.getElementById("code").value="";
-document.getElementById("name").value="";
-document.getElementById("size").value="";
-alert("Product Saved");
-}
-
-function save(){
-localStorage.setItem("sagarProducts",JSON.stringify(products));
-render();
-}
-
-function render(){
-document.getElementById("list").innerHTML="";
-let select=document.getElementById("productSelect");
-select.innerHTML='<option value="">Select Product</option>';
-products.forEach((p,i)=>{
-let div=document.createElement("div");
-div.className="item";
-div.textContent=p.code+" | "+p.name+" | "+p.size+" | "+p.unit+" ";
-let edit=document.createElement("button");
-edit.className="small";
-edit.textContent="Edit";
-edit.onclick=()=>editProduct(i);
-let del=document.createElement("button");
-del.className="small";
-del.textContent="Delete";
-del.onclick=()=>deleteProduct(i);
-div.append(edit,del);
-document.getElementById("list").append(div);
-let option=document.createElement("option");
-option.value=p.code;
-option.textContent=p.name+" - "+p.size;
-select.append(option);
-});
-}
-
-function editProduct(i){
-let p=products[i];
-let name=prompt("Product Name",p.name);
-if(name===null)return;
-let size=prompt("Size",p.size);
-if(size===null)return;
-products[i]={...p,name:name.trim(),size:size.trim()};
-save();
-}
-
-function deleteProduct(i){
-if(confirm("Delete this product?")){
-products.splice(i,1);
-save();
-}
-}
-
-function logout(){
-location.reload();
-}
-</script>
-</body>
-</html>
+const firebaseConfig={apiKey:"AIzaSyDn2pJxlk6AIBsdgMFls_5Ct2z_eIWP3qA",authDomain:"sagar-sweets-inventory.firebaseapp.com",databaseURL:"https://sagar-sweets-inventory-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"sagar-sweets-inventory",storageBucket:"sagar-sweets-inventory.firebasestorage.app",messagingSenderId:"954359194903",appId:"1:954359194903:web:833bbb4441a5aecf19c352",measurementId:"G-LD5RCYSLLK"};
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth(),db=firebase.database();
+auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
+const branches=["ASHOKA MARG","GANGAPUR","TAPOVAN","GOVIND NAGAR","COLLEGE ROAD"],$=x=>document.getElementById(x);
+let products=[],entries=[],syncing=false,productsRef=null,entriesRef=null;
+let today=new Date().toISOString().slice(0,10);$("idate").value=$("odate").value=today;
+$("oparty").innerHTML=branches.map(x=>`<option>${x}</option>`).join("");
+function esc(x){return String(x).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function k(p){return p.name+"|"+p.size}
+function saveCloud(){if(!auth.currentUser||syncing)return;return Promise.all([db.ref("sagarStock/products").set(products),db.ref("sagarStock/entries").set(entries)])}
+function productSelect(id){$(id).innerHTML=products.map(p=>`<option value="${esc(k(p))}">${esc(p.name)}</option>`).join("")||'<option value="">पहले Product जोड़ें</option>'}
+function updateType(t){let p=products.find(p=>k(p)===$(t+"p").value);$(t+"s").innerHTML=p?`<option>${esc(p.size)}</option>`:"";$("info"+t).textContent=p?`एक Carton में ${p.per} Box | Total Box = Carton × ${p.per} + Loose Box`:"Product चुनें"}
+function bal(p){let n=entries.filter(e=>e.name===p.name&&e.size===p.size).reduce((s,e)=>s+(e.type==="in"?e.total:-e.total),0);return {total:n,carton:Math.floor(n/p.per),loose:n%p.per}}
+function refresh(){["i","o"].forEach(t=>{productSelect(t+"p");updateType(t)});$("plist").innerHTML=products.length?`<table><tr><th>Product</th><th>Size</th><th>Box/Carton</th><th></th></tr>${products.map((p,i)=>`<tr><td>${esc(p.name)}</td><td>${esc(p.size)}</td><td>${p.per}</td><td><button class="del" onclick="removeP(${i})">Delete</button></td></tr>`).join("")}</table>`:"अभी Product नहीं है";let f=$("filter").value;$("filter").innerHTML='<option value="">सभी Product</option>'+products.map(p=>`<option value="${esc(k(p))}">${esc(p.name)} — ${esc(p.size)}</option>`).join("");$("filter").value=f;report();history()}
+function removeP(i){if(confirm("Product हटाएँ? पुरानी Entries History में रहेंगी।")){products.splice(i,1);refresh();saveCloud().catch(showError)}}
+$("add").onclick=()=>{let name=$("pn").value.trim(),size=$("ps").value.trim().toUpperCase(),per=Number($("pp").value);if(!name||!size||!Number.isInteger(per)||per<1)return alert("Product, Size और Box per Carton भरें");if(products.some(p=>k(p).toLowerCase()===(name+"|"+size).toLowerCase()))return alert("यह Product Size पहले से मौजूद है");products.push({name,size,per});$("pn").value=$("ps").value=$("pp").value="";refresh();saveCloud().then(()=>alert("Product Save हो गया")).catch(showError)};
+["ip","op"].forEach(id=>$(id).onchange=()=>updateType(id[0]));
+function entry(t){let p=products.find(p=>k(p)===$(t+"p").value),c=Number($(t+"c").value||0),l=Number($(t+"l").value||0);if(!p)return alert("पहले Product Master में Product जोड़ें");if(!Number.isInteger(c)||!Number.isInteger(l)||c<0||l<0||(!c&&!l))return alert("Carton और Loose Box Qty सही भरें");let total=c*p.per+l;if(t==="o"&&total>bal(p).total)return alert("Stock कम है। उपलब्ध: "+bal(p).carton+" Carton और "+bal(p).loose+" Box");entries.push({id:Date.now(),type:t==="i"?"in":"out",date:$(t+"date").value,party:t==="i"?"Factory":$("oparty").value,name:p.name,size:p.size,per:p.per,c,l,total});$(t+"c").value=$(t+"l").value=0;refresh();saveCloud().then(()=>alert("Entry Save हो गई")).catch(showError)}
+$("si").onclick=()=>entry("i");$("so").onclick=()=>entry("o");
+function report(){let arr=products.filter(p=>!$("filter").value||k(p)===$("filter").value);$("rtable").innerHTML=arr.length?`<table><tr><th>Product / Size</th><th>In Carton</th><th>In Box</th><th>Out Carton</th><th>Out Box</th><th>Balance Carton</th><th>Balance Box</th></tr>${arr.map(p=>{let es=entries.filter(e=>e.name===p.name&&e.size===p.size),sum=(type,field)=>es.filter(e=>e.type===type).reduce((s,e)=>s+e[field],0),b=bal(p);return `<tr><td><b>${esc(p.name)}</b><br>${esc(p.size)}<br><small>1 Carton = ${p.per} Box</small></td><td>${sum("in","c")}</td><td>${sum("in","l")}</td><td>${sum("out","c")}</td><td>${sum("out","l")}</td><td>${b.carton}</td><td>${b.loose} <small>(Total ${b.total})</small></td></tr>`}).join("")}</table>`:"पहले Product जोड़ें"}
+function history(){$("htable").innerHTML=entries.length?`<table><tr><th>Date</th><th>Type</th><th>Party</th><th>Product / Size</th><th>Carton</th><th>Loose Box</th><th>Total Box</th></tr>${[...entries].sort((a,b)=>b.id-a.id).map(e=>`<tr><td>${esc(e.date)}</td><td>${e.type==="in"?"IN":"OUT"}</td><td>${esc(e.party)}</td><td>${esc(e.name)} / ${esc(e.size)}</td><td>${e.c}</td><td>${e.l}</td><td>${e.total}</td></tr>`).join("")}</table>`:"अभी कोई Entry नहीं"}
+function showError(e){console.error(e);alert("Firebase में Save नहीं हुआ: "+(e.message||e))}
+$("filter").onchange=report;
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.id===b.dataset.tab));if(b.dataset.tab==="report")report()});
+function startApp(user){$("loginScreen").classList.add("hidden");$("app").style.display="block";$("loginMsg").textContent="";if(productsRef)productsRef.off();if(entriesRef)entriesRef.off();productsRef=db.ref("sagarStock/products");entriesRef=db.ref("sagarStock/entries");productsRef.on("value",s=>{syncing=true;products=s.val()||[];syncing=false;refresh()},showError);entriesRef.on("value",s=>{syncing=true;entries=s.val()||[];syncing=false;refresh()},showError)}
+$("loginBtn").onclick=()=>{let email=$("email").value.trim(),password=$("password").value;if(!email||!password){$("loginMsg").textContent="Email और Password भरें।";return} $("loginBtn").disabled=true;auth.signInWithEmailAndPassword(email,password).then(c=>startApp(c.user)).catch(e=>{$("loginMsg").textContent="Login नहीं हुआ: "+e.message}).finally(()=>$("loginBtn").disabled=false)};
+$("password").addEventListener("keydown",e=>{if(e.key==="Enter")$("loginBtn").click()});
+$("logoutBtn").onclick=()=>auth.signOut().then(()=>{if(productsRef)productsRef.off();if(entriesRef)entriesRef.off();$("app").style.display="none";$("loginScreen").classList.remove("hidden");$("password").value="";products=[];entries=[]});
+auth.onAuthStateChanged(user=>{if(user)startApp(user);else{$("app").style.display="none";$("loginScreen").classList.remove("hidden")}});
+</script></body></html>
