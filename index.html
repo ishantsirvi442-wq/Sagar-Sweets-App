@@ -56,7 +56,8 @@ button{background:#7b1828;color:white;border:0;font-weight:bold}
 </div>
 <button onclick="logout()">Logout</button>
 </div>
-</main>
+</main><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
 let products=JSON.parse(localStorage.getItem("sagarProducts")||"[]");
 
