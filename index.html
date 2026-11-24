@@ -1,133 +1,141 @@
+
 <!DOCTYPE html>
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sagar Sweets Inventory</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sagar Sweets Product Master</title>
 <style>
-*{box-sizing:border-box}
-body{margin:0;font-family:Arial;background:#f4f5f9;color:#222}
-header{background:#7b1828;color:white;padding:22px;text-align:center}
-header h2{margin:0}
-.container{padding:18px;max-width:600px;margin:auto}
-.card{background:white;padding:18px;margin:15px 0;border-radius:12px;box-shadow:0 2px 8px #ddd}
-input,select,button{width:100%;padding:13px;margin:9px 0;border:1px solid #ccc;border-radius:7px;font-size:16px}
+body{font-family:Arial;background:#f4f4f4;margin:0}
+header{background:#7b1828;color:white;text-align:center;padding:20px}
+main{max-width:600px;margin:auto;padding:15px}
+.card{background:white;padding:18px;margin:15px 0;border-radius:12px}
+input,select,button{width:100%;padding:13px;margin:8px 0;box-sizing:border-box;border:1px solid #ccc;border-radius:7px;font-size:16px}
 button{background:#7b1828;color:white;border:0;font-weight:bold}
-h3{color:#7b1828}
-.hidden{display:none}
+.item{padding:12px;border-bottom:1px solid #ddd}
+.small{width:auto;padding:8px;margin-right:5px}
 </style>
 </head>
 <body>
 <header>
 <h2>SAGAR SWEETS</h2>
-<p>Inventory Management System</p>
+<p>Product Master</p>
 </header>
-
-<div class="container">
-
+<main>
 <div class="card" id="login">
-<h3>Login</h3>
-<select id="role">
-<option value="">Select Login Type</option>
-<option value="admin">Admin</option>
-<option value="branch">Branch</option>
-<option value="factory">Factory</option>
-</select>
-
-<select id="branch">
-<option value="">Select Branch</option>
-<option>Gangapur Road</option>
-<option>Govind Nagar</option>
-<option>Tapovan</option>
-<option>College Road</option>
-<option>Ashoka Marg</option>
-</select>
-
+<h3>Admin Login (Demo)</h3>
 <input id="username" placeholder="Username">
 <input id="password" type="password" placeholder="Password">
-<button onclick="loginUser()">Login</button>
+<button onclick="login()">Login</button>
 </div>
 
-<div id="dashboard" class="hidden">
+<div id="panel" style="display:none">
 <div class="card">
-<h3>Welcome to Sagar Sweets</h3>
-<p id="welcome"></p>
-<button onclick="showStock()">Stock Management</button>
-<button onclick="logout()">Logout</button>
+<h3>Add New Product</h3>
+<input id="code" placeholder="Product Code">
+<input id="name" placeholder="Product Name">
+<input id="size" placeholder="Size (Example: 500 GM)">
+<select id="unit">
+<option value="KG">KG</option>
+<option value="Box">Box</option>
+<option value="PCS">PCS</option>
+</select>
+<button onclick="addProduct()">Save Product</button>
 </div>
 
-<div class="card hidden" id="stock">
-<h3>Stock Entry</h3>
-<input type="date" id="date">
-<select id="product">
+<div class="card">
+<h3>Product List</h3>
+<div id="list"></div>
+</div>
+
+<div class="card">
+<h3>Product Dropdown Test</h3>
+<select id="productSelect">
 <option value="">Select Product</option>
 </select>
-<input type="number" id="qty" placeholder="Quantity">
-<select id="unit">
-<option>KG</option>
-<option>Box</option>
-<option>PCS</option>
-</select>
-<button onclick="saveStock()">Save Entry</button>
-<h3>Stock Entries</h3>
-<div id="entries"></div>
 </div>
+<button onclick="logout()">Logout</button>
 </div>
-</div>
-
+</main>
 <script>
-let currentRole="";
-let currentBranch="";
+let products=JSON.parse(localStorage.getItem("sagarProducts")||"[]");
 
-function loginUser(){
-let role=document.getElementById("role").value;
-let branch=document.getElementById("branch").value;
-let user=document.getElementById("username").value;
-let pass=document.getElementById("password").value;
-
-if(!role || !user || !pass){
-alert("Please fill all details");
-return;
-}
-if(role==="branch" && !branch){
-alert("Select Branch");
-return;
+function login(){
+if(document.getElementById("username").value==="admin" &&
+document.getElementById("password").value==="admin123"){
+document.getElementById("login").style.display="none";
+document.getElementById("panel").style.display="block";
+render();
+}else alert("Demo Login: admin / admin123");
 }
 
-currentRole=role;
-currentBranch=branch;
-document.getElementById("login").classList.add("hidden");
-document.getElementById("dashboard").classList.remove("hidden");
-document.getElementById("welcome").innerText=
-role==="admin"?"Admin Login":role==="factory"?"Factory Login":branch+" Login";
-}
-
-function showStock(){
-document.getElementById("stock").classList.remove("hidden");
-}
-
-function saveStock(){
-let product=document.getElementById("product").value;
-let qty=document.getElementById("qty").value;
+function addProduct(){
+let code=document.getElementById("code").value.trim();
+let name=document.getElementById("name").value.trim();
+let size=document.getElementById("size").value.trim();
 let unit=document.getElementById("unit").value;
-let date=document.getElementById("date").value;
 
-if(!product || !qty || !date){
-alert("Fill all stock details");
+if(!code||!name||!size){
+alert("Sabhi details bharein");
 return;
 }
-let data=JSON.parse(localStorage.getItem("sagarStock")||"[]");
-data.push({date,product,qty,unit,branch:currentBranch});
-localStorage.setItem("sagarStock",JSON.stringify(data));
-showEntries();
-alert("Stock Entry Saved");
+if(products.some(p=>p.code.toLowerCase()===code.toLowerCase())){
+alert("Product Code already exists");
+return;
+}
+products.push({code,name,size,unit});
+save();
+document.getElementById("code").value="";
+document.getElementById("name").value="";
+document.getElementById("size").value="";
+alert("Product Saved");
 }
 
-function showEntries(){
-let data=JSON.parse(localStorage.getItem("sagarStock")||"[]");
-document.getElementById("entries").innerHTML=data.map(x=>
-`<p>${x.date} | ${x.branch} | ${x.product} | ${x.qty} ${x.unit}</p>`
-).join("");
+function save(){
+localStorage.setItem("sagarProducts",JSON.stringify(products));
+render();
+}
+
+function render(){
+document.getElementById("list").innerHTML="";
+let select=document.getElementById("productSelect");
+select.innerHTML='<option value="">Select Product</option>';
+products.forEach((p,i)=>{
+let div=document.createElement("div");
+div.className="item";
+div.textContent=p.code+" | "+p.name+" | "+p.size+" | "+p.unit+" ";
+let edit=document.createElement("button");
+edit.className="small";
+edit.textContent="Edit";
+edit.onclick=()=>editProduct(i);
+let del=document.createElement("button");
+del.className="small";
+del.textContent="Delete";
+del.onclick=()=>deleteProduct(i);
+div.append(edit,del);
+document.getElementById("list").append(div);
+let option=document.createElement("option");
+option.value=p.code;
+option.textContent=p.name+" - "+p.size;
+select.append(option);
+});
+}
+
+function editProduct(i){
+let p=products[i];
+let name=prompt("Product Name",p.name);
+if(name===null)return;
+let size=prompt("Size",p.size);
+if(size===null)return;
+products[i]={...p,name:name.trim(),size:size.trim()};
+save();
+}
+
+function deleteProduct(i){
+if(confirm("Delete this product?")){
+products.splice(i,1);
+save();
+}
 }
 
 function logout(){
