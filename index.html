@@ -6,7 +6,7 @@
 #languageSelect{font-weight:650;color:#172b55;background:#fff;max-width:105px}
 </style>
 </head><body>
-<div id="loginScreen"><div id="loginCard"><h1>🍬 SAGAR SWEETS</h1><p>Stock App Login</p><label>Admin Email</label><input id="email" type="email" autocomplete="username" placeholder="आपका Firebase Admin email"><label>Password</label><input id="password" type="password" autocomplete="current-password" placeholder="Password"><button class="save" id="loginBtn">Login</button><div id="loginMsg"></div><p class="note">हर बार ऐप खोलने पर Password डालना होगा। केवल अधिकृत Admin Login कर सकेगा।</p></div></div>
+<div id="loginScreen"><div id="loginCard"><h1>🍬 SAGAR SWEETS</h1><p>Stock App Login</p><label>Admin Email</label><input id="email" type="email" autocomplete="username" placeholder="आपका Firebase Admin email"><label>Password</label><input id="password" type="password" autocomplete="current-password" placeholder="Password"><button type="button" class="save" id="loginBtn">Login</button><div id="loginMsg"></div><p class="note">हर बार ऐप खोलने पर Password डालना होगा। केवल अधिकृत Admin Login कर सकेगा।</p></div></div>
 <div id="app"><header><div class="topline"><div><h1>🍬 SAGAR SWEETS</h1><small>Stock In • Stock Out • Stock Report</small></div><div style="display:flex;gap:6px;align-items:center"><select id="languageSelect" aria-label="Language" style="width:auto;padding:8px;border-radius:8px"><option value="hi">हिंदी</option><option value="en">English</option></select><button id="logoutBtn">Logout</button></div></div></header>
 <nav><button class="active" data-tab="in">Stock In</button><button data-tab="out">Stock Out</button><button data-tab="master">Product Master</button><button data-tab="report">Stock Report</button><button data-tab="orders">Order Book</button><button data-tab="history">History</button></nav>
 <main>
@@ -92,7 +92,8 @@ const en={
 let lang=localStorage.getItem('sagarLang')||'hi';const select=document.getElementById('languageSelect');
 function apply(){lang=select.value;localStorage.setItem('sagarLang',lang);document.documentElement.lang=lang;const dict=lang==='hi'?hi:en;const pairs=Object.entries(dict).sort((a,b)=>b[0].length-a[0].length);const walk=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while(n=walk.nextNode()){if(n.parentElement.closest('script,style,select option[data-keep],input'))continue;let v=n.nodeValue;for(const [a,b] of pairs)v=v.split(a).join(b);if(v!==n.nodeValue)n.nodeValue=v;}document.querySelectorAll('[placeholder]').forEach(el=>{let v=el.getAttribute('placeholder');for(const [a,b] of pairs)v=v.split(a).join(b);el.setAttribute('placeholder',v)});document.querySelectorAll('label,button,h1,h2,h3,small,p,th').forEach(el=>{if(el.childElementCount===0){let v=el.textContent;for(const [a,b] of pairs)v=v.split(a).join(b);el.textContent=v}});}
 select.value=lang;select.addEventListener('change',()=>{apply();});
-let translating=false;const obs=new MutationObserver(()=>{if(translating)return;translating=true;apply();translating=false});obs.observe(document.body,{childList:true,subtree:true,characterData:true});apply();
+// Translate the current screen once; avoid observing every DOM mutation so clicks remain responsive.
+apply();
 })();
 </script>
 </body></html>
