@@ -49,7 +49,7 @@ table{border-collapse:collapse;width:100%;min-width:620px}td,th{padding:10px;bor
 const firebaseConfig={apiKey:"AIzaSyDn2pJxlk6AIBsdgMFls_5Ct2z_eIWP3qA",authDomain:"sagar-sweets-inventory.firebaseapp.com",databaseURL:"https://sagar-sweets-inventory-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"sagar-sweets-inventory",storageBucket:"sagar-sweets-inventory.firebasestorage.app",messagingSenderId:"954359194903",appId:"1:954359194903:web:833bbb4441a5aecf19c352",measurementId:"G-LD5RCYSLLK"};
 firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth(),db=firebase.database();
-auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 const branches=["ASHOKA MARG","GANGAPUR","TAPOVAN","GOVIND NAGAR","COLLEGE ROAD"],$=x=>document.getElementById(x);
 let products=[],entries=[],orders=[],syncing=false,productsRef=null,entriesRef=null,ordersRef=null;
 let today=new Date().toISOString().slice(0,10);$("idate").value=$("odate").value=$("ordDate").value=today;
