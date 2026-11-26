@@ -196,7 +196,8 @@ function dashboard(){
  const put=(id,v)=>{const el=$(id);if(el)el.textContent=Number(v||0).toLocaleString("en-IN")};
  put("dProducts",active.length);put("dStock",totalStock);put("dIn",todayIn);put("dOut",todayOut);put("dPending",pending);put("dCompleted",completed);put("dTodayOrders",todayOrders);put("dEntries",entries.length);
  $("dashDate").textContent=new Date().toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"});
- $("dashBranches").innerHTML=`<table><tr><th>Branch</th><th>Carton</th><th>Loose Box</th><th>Total Box</th></tr>${branches.map(b=>{let es=entries.filter(e=>e.type==="out"&&e.party===b);let cartons=es.reduce((n,e)=>n+(Number(e.c)||0),0),loose=es.reduce((n,e)=>n+(Number(e.l)||0),0),total=es.reduce((n,e)=>n+(Number(e.total)||0),0);return `<tr><td><b>${esc(b)}</b></td><td>${cartons}</td><td>${loose}</td><td><b>${total}</b></td></tr>`}).join("")}</table>`;
+ const branchSummaryEl=$("dashBranches");
+ if(branchSummaryEl){branchSummaryEl.innerHTML=`<table><tr><th>Branch</th><th>Carton</th><th>Loose Box</th><th>Total Box</th></tr>${branches.map(b=>{let es=entries.filter(e=>e.type==="out"&&e.party===b);let cartons=es.reduce((n,e)=>n+(Number(e.c)||0),0),loose=es.reduce((n,e)=>n+(Number(e.l)||0),0),total=es.reduce((n,e)=>n+(Number(e.total)||0),0);return `<tr><td><b>${esc(b)}</b></td><td>${cartons}</td><td>${loose}</td><td><b>${total}</b></td></tr>`}).join("")}</table>`;}
 }
 function report(){
  const arr=products.filter(p=>!p.archived&&(!$("filter")||!$("filter").value||k(p)===$("filter").value));
