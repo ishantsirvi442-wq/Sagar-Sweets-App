@@ -330,15 +330,30 @@ $("filter").onchange=()=>{reportSearchDone=false;$("rtable").innerHTML='<p class
 $("searchReport").onclick=()=>{reportSearchDone=true;report();};
 $("searchBranchReport").onclick=()=>{branchSearchDone=true;renderBranchReport();};
 ["branchWiseFilter","branchProductFilter","branchDateFrom","branchDateTo"].forEach(id=>$(id).onchange=()=>{branchSearchDone=false;$("branchRtable").innerHTML='<p class="note">Search दबाकर रिपोर्ट देखें।</p>';});
+// Remember the last open menu so a page refresh returns to the same screen.
+const LAST_TAB_KEY="sagarLastOpenTab";
+function activateTab(tabId, shouldScroll=true){
+  const target=document.getElementById(tabId);
+  if(!target || !target.classList.contains("tab")) tabId="dashboard";
+  document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.id===tabId));
+  document.querySelectorAll("nav button[data-tab]").forEach(x=>x.classList.toggle("active",x.dataset.tab===tabId));
+  try{localStorage.setItem(LAST_TAB_KEY,tabId)}catch(e){}
+  if(shouldScroll)window.scrollTo({top:0,behavior:"auto"});
+}
+function restoreLastOpenTab(){
+  let last="dashboard";
+  try{last=localStorage.getItem(LAST_TAB_KEY)||"dashboard"}catch(e){}
+  activateTab(last,false);
+}
 // Add a consistent Back-to-Dashboard control to every menu screen.
-document.querySelectorAll("main .tab:not(#dashboard)").forEach(sec=>{if(sec.querySelector(".tab-back"))return;const back=document.createElement("button");back.type="button";back.className="tab-back no-print";back.textContent="← वापस Dashboard";back.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.id==="dashboard"));document.querySelectorAll("nav button[data-tab]").forEach(x=>x.classList.toggle("active",x.dataset.tab==="dashboard"));window.scrollTo({top:0,behavior:"smooth"});};sec.insertBefore(back,sec.firstChild);});
-document.querySelectorAll("nav button[data-tab]").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav button[data-tab]").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.id===b.dataset.tab));if(b.dataset.tab==="report"){reportSearchDone=false;report();}
+document.querySelectorAll("main .tab:not(#dashboard)").forEach(sec=>{if(sec.querySelector(".tab-back"))return;const back=document.createElement("button");back.type="button";back.className="tab-back no-print";back.textContent="← वापस Dashboard";back.onclick=()=>{activateTab("dashboard");window.scrollTo({top:0,behavior:"smooth"});};sec.insertBefore(back,sec.firstChild);});
+document.querySelectorAll("nav button[data-tab]").forEach(b=>b.onclick=()=>{activateTab(b.dataset.tab,false);if(b.dataset.tab==="report"){reportSearchDone=false;report();}
 if(b.dataset.tab==="dashboard")dashboard();
 if(b.dataset.tab==="lowStock"){lowStockSearchDone=false;$("lowStockTable").innerHTML='<p class="note">Low Stock देखने के लिए Search दबाएँ।</p>'; }let target=b.dataset.target;if(target){let el=document.querySelector("."+target);if(el)setTimeout(()=>el.scrollIntoView({behavior:"smooth",block:"start"}),80)}else window.scrollTo({top:0,behavior:"smooth"});$("mainMenu").open=false});
-function startApp(user){$("loginScreen").classList.add("hidden");$("app").style.display="block";$("loginMsg").textContent="";if(productsRef)productsRef.off();if(entriesRef)entriesRef.off();if(ordersRef)ordersRef.off();productsRef=db.ref("sagarStock/products");entriesRef=db.ref("sagarStock/entries");ordersRef=db.ref("sagarStock/orders");productsRef.on("value",s=>{syncing=true;products=normalizeProducts(s.val());syncing=false;refresh()},showError);entriesRef.on("value",s=>{syncing=true;entries=s.val()||[];syncing=false;refresh()},showError);ordersRef.on("value",s=>{let v=s.val()||{};orders=Object.entries(v).map(([id,o])=>({...o,id}));renderOrders()},showError)}
+function startApp(user){$("loginScreen").classList.add("hidden");$("app").style.display="block";$("loginMsg").textContent="";restoreLastOpenTab();if(productsRef)productsRef.off();if(entriesRef)entriesRef.off();if(ordersRef)ordersRef.off();productsRef=db.ref("sagarStock/products");entriesRef=db.ref("sagarStock/entries");ordersRef=db.ref("sagarStock/orders");productsRef.on("value",s=>{syncing=true;products=normalizeProducts(s.val());syncing=false;refresh()},showError);entriesRef.on("value",s=>{syncing=true;entries=s.val()||[];syncing=false;refresh()},showError);ordersRef.on("value",s=>{let v=s.val()||{};orders=Object.entries(v).map(([id,o])=>({...o,id}));renderOrders()},showError)}
 $("loginBtn").onclick=()=>{let email=$("email").value.trim(),password=$("password").value;if(!email||!password){$("loginMsg").textContent="Email और Password भरें।";return} $("loginBtn").disabled=true;authPersistenceReady.then(()=>auth.signInWithEmailAndPassword(email,password)).catch(e=>{$("loginMsg").textContent="Login नहीं हुआ: "+e.message}).finally(()=>$("loginBtn").disabled=false)};
 $("password").addEventListener("keydown",e=>{if(e.key==="Enter")$("loginBtn").click()});
-$("logoutBtn").onclick=()=>auth.signOut().then(()=>{if(productsRef)productsRef.off();if(entriesRef)entriesRef.off();if(ordersRef)ordersRef.off();$("app").style.display="none";$("loginScreen").classList.remove("hidden");$("password").value="";products=[];entries=[];orders=[]});
+$("logoutBtn").onclick=()=>auth.signOut().then(()=>{try{localStorage.removeItem(LAST_TAB_KEY)}catch(e){}if(productsRef)productsRef.off();if(entriesRef)entriesRef.off();if(ordersRef)ordersRef.off();$("app").style.display="none";$("loginScreen").classList.remove("hidden");$("password").value="";products=[];entries=[];orders=[]});
 authPersistenceReady.then(()=>{auth.onAuthStateChanged(user=>{if(user)startApp(user);else{$("app").style.display="none";$("loginScreen").classList.remove("hidden")}})}).catch(e=>{$("loginMsg").textContent="Login storage चालू नहीं हुआ: "+e.message;$("loginScreen").classList.remove("hidden")});
 window.addEventListener("focus",refreshLocalDate);document.addEventListener("visibilitychange",()=>{if(!document.hidden)refreshLocalDate();});setInterval(refreshLocalDate,60000);
 </script>
