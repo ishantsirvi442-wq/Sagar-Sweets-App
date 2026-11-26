@@ -39,6 +39,7 @@ table{border-collapse:collapse;width:100%;min-width:620px}td,th{padding:10px;bor
  main{max-width:none!important;width:100%!important;padding:0!important;margin:0!important}
  .tab{display:none!important}
  body.print-report #report,body.print-branch-report #branchReport,body.print-history #history,body.print-order #orderList,body.print-items #itemList{display:block!important}
+ body.print-order #orderTable th:nth-child(6),body.print-order #orderTable td:nth-child(6){display:none!important}
  .card{border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;margin:0!important;break-inside:auto!important}
  .print-brand{display:block!important;border-bottom:2px solid #641b2b;padding:0 0 9px;margin:0 0 15px;text-align:center}
  .print-brand .brand-name{font-size:20pt;font-weight:800;letter-spacing:1.2px;color:#641b2b;margin:0 0 3px}
@@ -60,6 +61,8 @@ table{border-collapse:collapse;width:100%;min-width:620px}td,th{padding:10px;bor
  .note,small{color:#51494c!important}
 }
 .print-brand,.print-footer{display:none}
+.tab-back{display:flex;align-items:center;gap:8px;margin:0 0 12px;width:auto;background:#fff;color:#641b2b;border:1px solid #d9c5c8;font-weight:800}
+@media print{.tab-back{display:none!important}}
 </style>
 </head><body>
 <div id="loginScreen"><div id="loginCard"><h1>🍬 SAGAR SWEETS</h1><p>Stock App Login</p><label>Admin Email</label><input id="email" type="email" autocomplete="username" placeholder="आपका Firebase Admin email"><label>Password</label><input id="password" type="password" autocomplete="current-password" placeholder="Password"><button type="button" class="save" id="loginBtn">Login</button><div id="loginMsg"></div><p class="note">एक बार Login करें। Logout करने तक ऐप आपको याद रखेगा। केवल अधिकृत Admin Login कर सकेगा।</p></div></div>
@@ -325,6 +328,8 @@ $("filter").onchange=()=>{reportSearchDone=false;$("rtable").innerHTML='<p class
 $("searchReport").onclick=()=>{reportSearchDone=true;report();};
 $("searchBranchReport").onclick=()=>{branchSearchDone=true;renderBranchReport();};
 ["branchWiseFilter","branchProductFilter"].forEach(id=>$(id).onchange=()=>{branchSearchDone=false;$("branchRtable").innerHTML='<p class="note">Search दबाकर रिपोर्ट देखें।</p>';});
+// Add a consistent Back-to-Dashboard control to every menu screen.
+document.querySelectorAll("main .tab:not(#dashboard)").forEach(sec=>{if(sec.querySelector(".tab-back"))return;const back=document.createElement("button");back.type="button";back.className="tab-back no-print";back.textContent="← वापस Dashboard";back.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.id==="dashboard"));document.querySelectorAll("nav button[data-tab]").forEach(x=>x.classList.toggle("active",x.dataset.tab==="dashboard"));window.scrollTo({top:0,behavior:"smooth"});};sec.insertBefore(back,sec.firstChild);});
 document.querySelectorAll("nav button[data-tab]").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav button[data-tab]").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.id===b.dataset.tab));if(b.dataset.tab==="report"){reportSearchDone=false;report();}
 if(b.dataset.tab==="dashboard")dashboard();
 if(b.dataset.tab==="lowStock"){lowStockSearchDone=false;$("lowStockTable").innerHTML='<p class="note">Low Stock देखने के लिए Search दबाएँ।</p>'; }let target=b.dataset.target;if(target){let el=document.querySelector("."+target);if(el)setTimeout(()=>el.scrollIntoView({behavior:"smooth",block:"start"}),80)}else window.scrollTo({top:0,behavior:"smooth"});$("mainMenu").open=false});
