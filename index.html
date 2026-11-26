@@ -32,7 +32,7 @@ table{border-collapse:collapse;width:100%;min-width:620px}td,th{padding:10px;bor
 .topline button{background:#ffffff20;color:white;border:1px solid #ffffff66}
 #languageSelect{font-weight:650;color:var(--maroon);background:#fff;max-width:105px}
 @media(max-width:600px){header{padding:13px 14px}header h1{font-size:19px}nav{padding:8px 10px}.menu-items button{font-size:14px;padding:12px}main{padding:10px}.card{padding:14px;border-radius:14px}.grid{grid-template-columns:1fr;gap:10px}.full{grid-column:auto}input,select{font-size:16px}.topline{align-items:flex-start}.topline>div:last-child{flex-wrap:wrap;justify-content:flex-end}}
-@media print{@page{size:A4 portrait;margin:12mm}body{background:#fff;color:#000}header,nav,#loginScreen,.no-print{display:none!important}main{max-width:none;padding:0;margin:0}.tab{display:none!important}#report{display:block!important}body.print-history #report{display:none!important}body.print-history #history{display:block!important}body.print-order #report,body.print-order #history{display:none!important}body.print-order #orderList{display:block!important}body.print-order #orders{display:none!important}body.print-items #itemList{display:block!important}body.print-items #dashboard,body.print-items #in,body.print-items #out,body.print-items #master,body.print-items #report,body.print-items #orders,body.print-items #orderList,body.print-items #history{display:none!important}body.print-items #itemList .no-print{display:none!important}body.print-report #report .grid,body.print-report #report>.card>.grid{display:none!important}body.print-report #report .no-print{display:none!important}body.print-report #reportHeading{width:100%;text-align:center!important;font-size:26px!important;font-weight:800!important;letter-spacing:.4px;margin:12px 0 24px!important;text-transform:uppercase}.card{border:0;box-shadow:none;padding:0;margin:0;break-inside:avoid}table{min-width:0!important;width:100%;font-size:9px;border-collapse:collapse}td,th{font-size:9px;padding:5px;border:1px solid #bbb;vertical-align:top}h2,h3{color:#000;margin:0 0 10px}.note,small{color:#333!important}}
+@media print{@page{size:A4 portrait;margin:12mm}body{background:#fff;color:#000}header,nav,#loginScreen,.no-print{display:none!important}main{max-width:none;padding:0;margin:0}.tab{display:none!important}#report{display:block!important}body.print-history #report{display:none!important}body.print-history #history{display:block!important}body.print-order #report,body.print-order #history{display:none!important}body.print-order #orderList{display:block!important}body.print-order #orders{display:none!important}body.print-items #itemList{display:block!important}body.print-items #dashboard,body.print-items #in,body.print-items #out,body.print-items #master,body.print-items #report,body.print-items #orders,body.print-items #orderList,body.print-items #history{display:none!important}body.print-items #itemList .no-print{display:none!important}body.print-report #report .grid,body.print-report #report>.card>.grid{display:none!important}body.print-report #report .no-print{display:none!important}body.print-branch-report #report,body.print-branch-report #history,body.print-branch-report #dashboard,body.print-branch-report #in,body.print-branch-report #out,body.print-branch-report #master,body.print-branch-report #itemList,body.print-branch-report #lowStock,body.print-branch-report #orders,body.print-branch-report #orderList{display:none!important}body.print-branch-report #branchReport{display:block!important}body.print-branch-report #branchReport .no-print{display:none!important}body.print-report #reportHeading{width:100%;text-align:center!important;font-size:26px!important;font-weight:800!important;letter-spacing:.4px;margin:12px 0 24px!important;text-transform:uppercase}.card{border:0;box-shadow:none;padding:0;margin:0;break-inside:avoid}table{min-width:0!important;width:100%;font-size:9px;border-collapse:collapse}td,th{font-size:9px;padding:5px;border:1px solid #bbb;vertical-align:top}h2,h3{color:#000;margin:0 0 10px}.note,small{color:#333!important}}
 </style>
 </head><body>
 <div id="loginScreen"><div id="loginCard"><h1>🍬 SAGAR SWEETS</h1><p>Stock App Login</p><label>Admin Email</label><input id="email" type="email" autocomplete="username" placeholder="आपका Firebase Admin email"><label>Password</label><input id="password" type="password" autocomplete="current-password" placeholder="Password"><button type="button" class="save" id="loginBtn">Login</button><div id="loginMsg"></div><p class="note">एक बार Login करें। Logout करने तक ऐप आपको याद रखेगा। केवल अधिकृत Admin Login कर सकेगा।</p></div></div>
@@ -79,21 +79,37 @@ let today=new Date().toISOString().slice(0,10);$("idate").value=$("odate").value
 $("oparty").innerHTML=branches.map(x=>`<option>${x}</option>`).join("");$("branchWiseFilter").innerHTML='<option value="">सभी Branch</option>'+branches.map(x=>`<option value="${x}">${x}</option>`).join("");
 function esc(x){return String(x).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function k(p){return p.name+"|"+p.size}
-async function saveCloud(){
-  if(!auth.currentUser)throw new Error("Login session नहीं है। कृपया Admin से दोबारा Login करें।");
-  // Never skip a write just because a Firebase value-listener is refreshing the screen.
-  const productsToSave=JSON.parse(JSON.stringify(products));
-  const entriesToSave=JSON.parse(JSON.stringify(entries));
-  await Promise.all([
-    db.ref("sagarStock/products").set(productsToSave),
-    db.ref("sagarStock/entries").set(entriesToSave)
-  ]);
-  // Read back from Firebase so the app never reports success for an unverified save.
-  const saved=await db.ref("sagarStock/products").once("value");
-  const savedProducts=saved.val()||[];
-  if(JSON.stringify(savedProducts)!==JSON.stringify(productsToSave)){
-    throw new Error("Firebase में Product verify नहीं हुआ। Internet या Database Rules जाँचें।");
-  }
+function normalizeProducts(value){
+  if(Array.isArray(value)) return value.filter(Boolean);
+  if(value && typeof value==="object") return Object.keys(value).sort((a,b)=>Number(a)-Number(b)).map(key=>value[key]).filter(Boolean);
+  return [];
+}
+function normText(value){return String(value??"").trim().replace(/\s+/g," ").toLowerCase()}
+async function changeProducts(mutator){
+  if(!auth.currentUser) throw new Error("Login session नहीं है। कृपया Admin से दोबारा Login करें।");
+  let issue="";
+  const result=await db.ref("sagarStock/products").transaction(current=>{
+    issue="";
+    const currentList=normalizeProducts(current).slice();
+    const next=mutator(currentList, message=>{issue=message||"";});
+    return next===undefined?currentList:next;
+  }, undefined, false);
+  if(issue) throw new Error(issue);
+  if(!result.committed) throw new Error("Firebase में Product अपडेट नहीं हुआ। Internet या Database Rules जाँचें।");
+  products=normalizeProducts(result.snapshot.val());
+  refresh();
+  return true;
+}
+async function appendEntryCloud(entry){
+  if(!auth.currentUser) throw new Error("Login session नहीं है। कृपया Admin से दोबारा Login करें।");
+  const result=await db.ref("sagarStock/entries").transaction(current=>{
+    const list=Array.isArray(current)?current.slice():(current&&typeof current==="object"?Object.keys(current).sort((a,b)=>Number(a)-Number(b)).map(key=>current[key]):[]);
+    list.push(entry);
+    return list;
+  }, undefined, false);
+  if(!result.committed) throw new Error("Stock Entry Firebase में सेव नहीं हुई।");
+  entries=Array.isArray(result.snapshot.val())?result.snapshot.val():normalizeProducts(result.snapshot.val());
+  refresh();
   return true;
 }
 function itemPhotoHTML(p,size=52){return p&&p.photo?`<img src="${p.photo}" alt="${esc(p.name||"Item")}" style="width:${size}px;height:${size}px;object-fit:contain;border:1px solid #ddd;border-radius:8px;background:#fff">`:`<div style="width:${size}px;height:${size}px;border:1px dashed #bbb;border-radius:8px;display:grid;place-items:center;color:#888;font-size:10px">No Photo</div>`}
@@ -111,15 +127,54 @@ function selectItemMode(mode){itemMode=mode;itemSearchDone=false;itemResults=[];
 function runItemSearch(){let term=$("itemSearchText").value.trim().toLowerCase();if(itemMode!=="all"&&!term)return alert(itemMode==="items"?"Item का नाम लिखें।":"Size लिखें।");let arr=products.map((p,i)=>({...p,_i:i}));if(itemMode==="items")arr=arr.filter(p=>p.name.toLowerCase().includes(term));else if(itemMode==="sizes")arr=arr.filter(p=>p.size.toLowerCase().includes(term));renderItemList(arr);}
 
 function refresh(){if($("lowStockTable")&&$("lowStock").classList.contains("active"))searchLowStock();["i","o"].forEach(t=>{productSelect(t+"p");updateType(t)});productSelect("ordProduct");updateOrderType();let f=$("filter").value;$("filter").innerHTML='<option value="">सभी Product</option>'+products.map(p=>`<option value="${esc(k(p))}">${esc(p.name)} — ${esc(p.size)}${p.archived?" (Archived)":""}</option>`).join("");$("filter").value=f;const bp=$("branchProductFilter").value;$("branchProductFilter").innerHTML='<option value="">सभी Product</option>'+products.filter(p=>!p.archived).map(p=>`<option value="${esc(k(p))}">${esc(p.name)} — ${esc(p.size)}</option>`).join("");$("branchProductFilter").value=bp;report();history();renderOrders();dashboard();if(window.applySagarLanguage)window.applySagarLanguage();}
-function removeP(i){if(confirm("इस Product को Archive करें? यह Stock Entry और History में सुरक्षित रहेगा और नई Entry में नहीं दिखेगा।")){products[i].archived=true;refresh();saveCloud().then(()=>alert("Product Archive हो गया। डेटा सुरक्षित है।")).catch(showError)}}
-function restoreP(i){products[i].archived=false;refresh();saveCloud().then(()=>alert("Product फिर से चालू हो गया।")).catch(showError)}
-function editP(i){let p=products[i];if(!p)return;let name=prompt("Product Name बदलें:",p.name);if(name===null)return;name=name.trim();if(!name)return alert("Product Name खाली नहीं हो सकता");let size=prompt("Size / Weight बदलें:",p.size);if(size===null)return;size=size.trim().toUpperCase();if(!size)return alert("Size खाली नहीं हो सकता");let perText=prompt("एक Carton में Box:",String(p.per));if(perText===null)return;let per=Number(perText);if(!Number.isInteger(per)||per<1)return alert("Box per Carton सही भरें");let minText=prompt("Minimum Stock (कुल Box):",String(Number(p.minStock)||0));if(minText===null)return;let minStock=Number(minText);if(!Number.isInteger(minStock)||minStock<0)return alert("Minimum Stock 0 या उससे अधिक पूर्ण संख्या होनी चाहिए");let maxText=prompt("Maximum Stock (कुल Box):",String(Number(p.maxStock)||0));if(maxText===null)return;let maxStock=Number(maxText);if(!Number.isInteger(maxStock)||maxStock<0||(maxStock>0&&maxStock<minStock))return alert("Maximum Stock, Minimum Stock से कम नहीं होना चाहिए");if(products.some((x,j)=>j!==i&&(x.name+"|"+x.size).toLowerCase()===(name+"|"+size).toLowerCase()))return alert("यह Product और Size पहले से मौजूद है");if(!confirm("Product Details बदलें? पुराने Stock और History रिकॉर्ड अपनी पुरानी जानकारी के साथ सुरक्षित रहेंगे।"))return;products[i]={...p,name,size,per,minStock,maxStock};refresh();saveCloud().then(()=>alert("Product Details अपडेट हो गईं। पुराने History रिकॉर्ड सुरक्षित हैं।")).catch(showError)}
-function deleteP(i){let p=products[i];if(!p)return;if(!confirm("क्या "+p.name+" — "+p.size+" को Product Master से हमेशा के लिए हटाना है? पुराने Stock / History रिकॉर्ड सुरक्षित रहेंगे, लेकिन यह Product नई Entry में नहीं दिखेगा।"))return;products.splice(i,1);refresh();saveCloud().then(()=>alert("Product Master से हटाया गया। पुराने रिकॉर्ड सुरक्षित हैं।")).catch(showError)}
+async function removeP(i){
+  const p=products[i];if(!p)return;
+  if(!confirm("इस Product को Archive करें? यह Stock Entry और History में सुरक्षित रहेगा और नई Entry में नहीं दिखेगा।"))return;
+  try{await changeProducts(list=>{const x=list.find(q=>normText(q.name)===normText(p.name)&&normText(q.size)===normText(p.size));if(x)x.archived=true;return list;});alert("Product Archive हो गया। डेटा सुरक्षित है।")}catch(e){showError(e)}
+}
+async function restoreP(i){
+  const p=products[i];if(!p)return;
+  try{await changeProducts(list=>{const x=list.find(q=>normText(q.name)===normText(p.name)&&normText(q.size)===normText(p.size));if(x)x.archived=false;return list;});alert("Product फिर से चालू हो गया।")}catch(e){showError(e)}
+}
+function editP(i){
+  let p=products[i];if(!p)return;let name=prompt("Product Name बदलें:",p.name);if(name===null)return;name=name.trim();if(!name)return alert("Product Name खाली नहीं हो सकता");let size=prompt("Size / Weight बदलें:",p.size);if(size===null)return;size=size.trim().toUpperCase();if(!size)return alert("Size खाली नहीं हो सकता");let perText=prompt("एक Carton में Box:",String(p.per));if(perText===null)return;let per=Number(perText);if(!Number.isInteger(per)||per<1)return alert("Box per Carton सही भरें");let minText=prompt("Minimum Stock (कुल Box):",String(Number(p.minStock)||0));if(minText===null)return;let minStock=Number(minText);if(!Number.isInteger(minStock)||minStock<0)return alert("Minimum Stock 0 या उससे अधिक पूर्ण संख्या होनी चाहिए");let maxText=prompt("Maximum Stock (कुल Box):",String(Number(p.maxStock)||0));if(maxText===null)return;let maxStock=Number(maxText);if(!Number.isInteger(maxStock)||maxStock<0||(maxStock>0&&maxStock<minStock))return alert("Maximum Stock, Minimum Stock से कम नहीं होना चाहिए");if(!confirm("Product Details बदलें? पुराने Stock और History रिकॉर्ड अपनी पुरानी जानकारी के साथ सुरक्षित रहेंगे।"))return;
+  changeProducts((list,setIssue)=>{const duplicate=list.some(x=>!(normText(x.name)===normText(p.name)&&normText(x.size)===normText(p.size))&&normText(x.name)===normText(name)&&normText(x.size)===normText(size));if(duplicate){setIssue("यह Product और Size पहले से मौजूद है।");return list;}const x=list.find(q=>normText(q.name)===normText(p.name)&&normText(q.size)===normText(p.size));if(x)Object.assign(x,{name,size,per,minStock,maxStock});return list;}).then(()=>alert("Product Details अपडेट हो गईं। पुराने History रिकॉर्ड सुरक्षित हैं।")).catch(showError);
+}
+function deleteP(i){
+  let p=products[i];if(!p)return;if(!confirm("क्या "+p.name+" — "+p.size+" को Product Master से हमेशा के लिए हटाना है? पुराने Stock / History रिकॉर्ड सुरक्षित रहेंगे, लेकिन यह Product नई Entry में नहीं दिखेगा।"))return;
+  changeProducts(list=>list.filter(x=>!(normText(x.name)===normText(p.name)&&normText(x.size)===normText(p.size)))).then(()=>alert("Product Master से हटाया गया। पुराने रिकॉर्ड सुरक्षित हैं।")).catch(showError);
+}
 let pendingItemPhoto="";
 $("itemPhoto").onchange=async e=>{const file=e.target.files&&e.target.files[0];if(!file){pendingItemPhoto="";$("itemPhotoPreview").classList.add("hidden");return;}if(!file.type.startsWith("image/"))return alert("कृपया फोटो फाइल चुनें।");try{pendingItemPhoto=await new Promise((resolve,reject)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{const canvas=document.createElement("canvas"),max=360,scale=Math.min(1,max/Math.max(img.width,img.height));canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);resolve(canvas.toDataURL("image/jpeg",0.72));};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("फोटो पढ़ा नहीं जा सका"));};img.src=url;});$("itemPhotoPreview").src=pendingItemPhoto;$("itemPhotoPreview").classList.remove("hidden");}catch(err){alert(err.message);}};
-$("add").onclick=async()=>{let name=$("pn").value.trim(),size=$("ps").value.trim().toUpperCase(),per=Number($("pp").value),minStock=Number($("pmin").value||0),maxStock=Number($("pmax").value||0);if(!name||!size||!Number.isInteger(per)||per<1)return alert("Product, Size और Box per Carton भरें");if(!Number.isInteger(minStock)||minStock<0||!Number.isInteger(maxStock)||maxStock<0||(maxStock>0&&maxStock<minStock))return alert("Minimum / Maximum Stock सही भरें। Maximum, Minimum से कम नहीं होना चाहिए।");if(products.some(p=>k(p).toLowerCase()===(name+"|"+size).toLowerCase()))return alert("यह Product Size पहले से मौजूद है");const newProduct={name,size,per,minStock,maxStock,...(pendingItemPhoto?{photo:pendingItemPhoto}:{})};products.unshift(newProduct);refresh();const addButton=$("add");addButton.disabled=true;try{await saveCloud();$("pn").value=$("ps").value=$("pp").value=$("pmin").value=$("pmax").value="";$("itemPhoto").value="";pendingItemPhoto="";$("itemPhotoPreview").src="";$("itemPhotoPreview").classList.add("hidden");alert("Product Firebase में Save और Verify हो गया। Refresh करने पर भी रहेगा।");}catch(err){products.shift();refresh();showError(err)}finally{addButton.disabled=false}};
+$("add").onclick=async()=>{
+  let name=$("pn").value.trim(),size=$("ps").value.trim().toUpperCase(),per=Number($("pp").value),minStock=Number($("pmin").value||0),maxStock=Number($("pmax").value||0);
+  if(!name||!size||!Number.isInteger(per)||per<1)return alert("Product, Size और Box per Carton भरें");
+  if(!Number.isInteger(minStock)||minStock<0||!Number.isInteger(maxStock)||maxStock<0||(maxStock>0&&maxStock<minStock))return alert("Minimum / Maximum Stock सही भरें। Maximum, Minimum से कम नहीं होना चाहिए।");
+  const newProduct={name,size,per,minStock,maxStock,...(pendingItemPhoto?{photo:pendingItemPhoto}:{})};
+  const addButton=$("add");addButton.disabled=true;
+  try{
+    await changeProducts((list,setIssue)=>{
+      if(list.some(p=>normText(p.name)===normText(name)&&normText(p.size)===normText(size))){setIssue("यह Product Size Firebase में पहले से मौजूद है।");return list;}
+      list.unshift(newProduct);return list;
+    });
+    $("pn").value=$("ps").value=$("pp").value=$("pmin").value=$("pmax").value="";
+    $("itemPhoto").value="";pendingItemPhoto="";$("itemPhotoPreview").src="";$("itemPhotoPreview").classList.add("hidden");
+    alert("Product Firebase में स्थायी रूप से Save हो गया। Refresh करने पर भी रहेगा।");
+  }catch(err){showError(err)}
+  finally{addButton.disabled=false}
+};
 ["ip","op"].forEach(id=>$(id).onchange=()=>updateType(id[0]));["is","os"].forEach(id=>$(id).onchange=()=>renderEntryItemPreview(id[0]));
-function entry(t){let p=products.find(p=>p.name===$(t+"p").value&&p.size===$(t+"s").value),c=Number($(t+"c").value||0),l=Number($(t+"l").value||0);if(!p)return alert("पहले Product Master में Product जोड़ें");if(!Number.isInteger(c)||!Number.isInteger(l)||c<0||l<0||(!c&&!l))return alert("Carton और Loose Box Qty सही भरें");let total=c*p.per+l;if(t==="o"){let available=bal(p);if(available.total<=0)return alert("LOW STOCK ERROR: इस Product / Size का Stock बिल्कुल नहीं है। पहले Factory से Stock In करें।");if(total>available.total)return alert("LOW STOCK ERROR: मांगी गई Quantity उपलब्ध Stock से ज्यादा है। उपलब्ध Stock: "+available.carton+" Carton और "+available.loose+" Box ("+available.total+" कुल Box)। Stock Out नहीं हुआ।");}entries.push({id:Date.now(),type:t==="i"?"in":"out",date:$(t+"date").value,party:t==="i"?"Factory":$("oparty").value,by:$(t+"by").value.trim(),name:p.name,size:p.size,per:p.per,c,l,total});$(t+"c").value=$(t+"l").value=0;refresh();saveCloud().then(()=>alert("Entry Save हो गई")).catch(showError)}
+async function entry(t){
+  let p=products.find(p=>p.name===$(t+"p").value&&p.size===$(t+"s").value),c=Number($(t+"c").value||0),l=Number($(t+"l").value||0);
+  if(!p)return alert("पहले Product Master में Product जोड़ें");
+  if(!Number.isInteger(c)||!Number.isInteger(l)||c<0||l<0||(!c&&!l))return alert("Carton और Loose Box Qty सही भरें");
+  let total=c*p.per+l;
+  if(t==="o"){let available=bal(p);if(available.total<=0)return alert("LOW STOCK ERROR: इस Product / Size का Stock बिल्कुल नहीं है। पहले Factory से Stock In करें।");if(total>available.total)return alert("LOW STOCK ERROR: मांगी गई Quantity उपलब्ध Stock से ज्यादा है। उपलब्ध Stock: "+available.carton+" Carton और "+available.loose+" Box ("+available.total+" कुल Box)। Stock Out नहीं हुआ।");}
+  const entryData={id:Date.now(),type:t==="i"?"in":"out",date:$(t+"date").value,party:t==="i"?"Factory":$("oparty").value,by:$(t+"by").value.trim(),name:p.name,size:p.size,per:p.per,c,l,total};
+  const btn=$(t==="i"?"si":"so");btn.disabled=true;
+  try{await appendEntryCloud(entryData);$(t+"c").value=$(t+"l").value=0;alert("Entry Firebase में Save हो गई।")}
+  catch(err){showError(err)}finally{btn.disabled=false}
+}
 $("si").onclick=()=>entry("i");$("so").onclick=()=>entry("o");
 document.querySelectorAll("[data-item-mode]").forEach(b=>b.onclick=()=>selectItemMode(b.dataset.itemMode));
 $("searchItems").onclick=runItemSearch;
@@ -129,6 +184,7 @@ $("excelItems").onclick=()=>{if(!itemSearchDone||!itemResults.length)return aler
 $("pdfItems").onclick=()=>{if(!itemSearchDone||!itemResults.length)return alert("पहले Tab चुनकर Search करें।");document.body.classList.add("print-items");let done=()=>{document.body.classList.remove("print-items");window.removeEventListener("afterprint",done)};window.addEventListener("afterprint",done);window.print();setTimeout(done,10000)};
 
 let appliedBranch="";
+let reportSearchDone=false,branchSearchDone=false;
 function dashboard(){
  const active=products.filter(p=>!p.archived);
  const totalStock=active.reduce((sum,p)=>sum+bal(p).total,0);
@@ -156,17 +212,17 @@ function branchReportData(){
  for(const branch of branches){if(selected&&branch!==selected)continue;for(const p of arr){const es=entries.filter(e=>String(e.type).toLowerCase()==="out"&&String(e.party||"").trim().toLowerCase()===branch.toLowerCase()&&String(e.name||"").trim().toLowerCase()===p.name.trim().toLowerCase()&&String(e.size||"").trim().toLowerCase()===p.size.trim().toLowerCase());const cartons=es.reduce((n,e)=>n+(Number(e.c)||0),0),loose=es.reduce((n,e)=>n+(Number(e.l)||0),0),total=es.reduce((n,e)=>n+(Number(e.total)||((Number(e.c)||0)*(Number(e.per)||Number(p.per)||1)+(Number(e.l)||0))),0);if(total||cartons||loose)rows.push({"Branch":branch,"Product":p.name,"Size":p.size,"Carton Sent":cartons,"Loose Box Sent":loose,"Total Box Sent":total});}}
  return rows;
 }
-function renderBranchReport(){const rows=branchReportData();$("branchReportHeading").textContent=$("branchWiseFilter").value?$("branchWiseFilter").value+" — BRANCH WISE STOCK REPORT":"BRANCH WISE STOCK REPORT — सभी ब्रांच को भेजा गया माल";$("branchRtable").innerHTML=rows.length?`<table><tr><th>Branch</th><th>Product / Size</th><th>Carton Sent</th><th>Loose Box Sent</th><th>Total Box Sent</th></tr>${rows.map(r=>`<tr><td><b>${esc(r.Branch)}</b></td><td>${esc(r.Product)}<br>${esc(r.Size)}</td><td>${r["Carton Sent"]}</td><td>${r["Loose Box Sent"]}</td><td><b>${r["Total Box Sent"]}</b></td></tr>`).join("")}</table>`:"इस चयन के लिए कोई माल भेजने की Entry नहीं मिली";if(window.applySagarLanguage)window.applySagarLanguage();}
+function renderBranchReport(){if(!branchSearchDone){$("branchRtable").innerHTML='<p class="note">ब्रांच रिपोर्ट देखने के लिए Filter चुनकर Search दबाएँ।</p>';return;}const rows=branchReportData();$("branchReportHeading").textContent=$("branchWiseFilter").value?$("branchWiseFilter").value+" — BRANCH WISE STOCK REPORT":"BRANCH WISE STOCK REPORT — सभी ब्रांच को भेजा गया माल";$("branchRtable").innerHTML=rows.length?`<table><tr><th>Branch</th><th>Product / Size</th><th>Carton Sent</th><th>Loose Box Sent</th><th>Total Box Sent</th></tr>${rows.map(r=>`<tr><td><b>${esc(r.Branch)}</b></td><td>${esc(r.Product)}<br>${esc(r.Size)}</td><td>${r["Carton Sent"]}</td><td>${r["Loose Box Sent"]}</td><td><b>${r["Total Box Sent"]}</b></td></tr>`).join("")}</table>`:"इस चयन के लिए कोई माल भेजने की Entry नहीं मिली";if(window.applySagarLanguage)window.applySagarLanguage();}
 function reportData(){
  const arr=products.filter(p=>!p.archived&&(!$("filter")||!$("filter").value||k(p)===$("filter").value));
  const summary=arr.map(p=>{const b=bal(p);return {"Product":p.name,"Size":p.size,"Carton":b.carton,"Loose Box":b.loose,"Current Stock (Total Box)":b.total}});
- return {summary,branchData:branchReportData()};
+ return {summary,branchData:branchSearchDone?branchReportData():[]};
 }
-function exportWorkbook(){if(typeof XLSX==="undefined")return alert("Excel Export library load नहीं हुई। Internet चालू करके फिर कोशिश करें।");let d=reportData(),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(d.summary),"Stock Report");XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(d.branchData),"Branch Wise Stock");return wb}
+function exportWorkbook(){if(typeof XLSX==="undefined")return alert("Excel Export library load नहीं हुई। Internet चालू करके फिर कोशिश करें।");let d=reportData();if(!d)return null;let wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(d.summary),"Stock Report");XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(d.branchData),"Branch Wise Stock");return wb}
 function saveExcel(){let wb=exportWorkbook();if(!wb)return;XLSX.writeFile(wb,"Sagar_Sweets_Stock_Report_"+today+".xlsx")}
 $("excelReport").onclick=saveExcel;
 $("shareExcel").onclick=async()=>{let wb=exportWorkbook();if(!wb)return;let blob=new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),file=new File([blob],"Sagar_Sweets_Stock_Report_"+today+".xlsx",{type:blob.type});if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:"Sagar Sweets Stock Report",text:"Stock Report"})}catch(e){if(e.name!=="AbortError")alert("Share नहीं हो पाया: "+e.message)}}else{saveExcel();alert("Excel डाउनलोड हो गया। Downloads से WhatsApp या Email पर भेजें।")}};
-function printReport(branchMode=false){const oldTitle=document.title;document.title="Sagar Sweets "+(branchMode?"Branch Wise":"Stock")+" Report "+today;document.body.classList.add(branchMode?"print-branch-report":"print-report");let cleaned=false;const done=()=>{if(cleaned)return;cleaned=true;document.body.classList.remove("print-report","print-branch-report");document.title=oldTitle;window.removeEventListener("afterprint",done)};window.addEventListener("afterprint",done);window.print();setTimeout(done,10000)}
+function printReport(branchMode=false){if(branchMode&&!branchSearchDone)return alert("पहले Branch Wise Search दबाएँ।");if(!branchMode&&!reportSearchDone)return alert("पहले Stock Report में Search दबाएँ।");const oldTitle=document.title;document.title="Sagar Sweets "+(branchMode?"Branch Wise":"Stock")+" Report "+today;document.body.classList.add(branchMode?"print-branch-report":"print-report");let cleaned=false;const done=()=>{if(cleaned)return;cleaned=true;document.body.classList.remove("print-report","print-branch-report");document.title=oldTitle;window.removeEventListener("afterprint",done)};window.addEventListener("afterprint",done);window.print();setTimeout(done,10000)}
 $("pdfReport").onclick=()=>printReport(false);
 $("pdfBranchReport").onclick=()=>printReport(true);
 function filteredHistoryEntries(){return [...entries].filter(e=>(e.date||"")>=historyFromDate&&(e.date||"")<=historyToDate).sort((a,b)=>(b.id||0)-(a.id||0))}
@@ -214,9 +270,12 @@ $("backupData").onclick=downloadBackup;
 $("chooseRestore").onclick=()=>$("restoreFile").click();
 $("restoreFile").onchange=async e=>{let file=e.target.files&&e.target.files[0];if(!file)return;try{let data=JSON.parse(await file.text());if(data.app!=="Sagar Sweets Stock"||!Array.isArray(data.products)||!Array.isArray(data.entries)||typeof data.orders!=="object"||data.orders===null)throw new Error("यह Sagar Sweets का सही Backup नहीं है।");if(!confirm("ध्यान दें: Restore करने से अभी का Product, Stock History और Order डेटा Backup वाले डेटा से बदल जाएगा। पहले मौजूदा डेटा का Backup ले लिया है? जारी रखें?"))return;await db.ref("sagarStock").update({products:data.products,entries:data.entries,orders:data.orders});alert("Backup Restore हो गया। App का डेटा अपडेट हो गया।")}catch(err){alert("Restore नहीं हुआ: "+err.message)}finally{$("restoreFile").value=""}};
 function showError(e){console.error(e);alert("Firebase में Save नहीं हुआ: "+(e.message||e))}
-$("filter").onchange=report;$("searchReport").onclick=report;$("searchBranchReport").onclick=renderBranchReport;$("branchWiseFilter").onchange=()=>{$("branchRtable").innerHTML="<p class=\"note\">Search दबाकर रिपोर्ट देखें।</p>"};
+$("filter").onchange=()=>{reportSearchDone=false;$("rtable").innerHTML='<p class="note">स्टॉक देखने के लिए Search दबाएँ।</p>';};
+$("searchReport").onclick=()=>{reportSearchDone=true;report();};
+$("searchBranchReport").onclick=()=>{branchSearchDone=true;renderBranchReport();};
+["branchWiseFilter","branchProductFilter"].forEach(id=>$(id).onchange=()=>{branchSearchDone=false;$("branchRtable").innerHTML='<p class="note">Search दबाकर रिपोर्ट देखें।</p>';});
 document.querySelectorAll("nav button[data-tab]").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav button[data-tab]").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.id===b.dataset.tab));if(b.dataset.tab==="report")report();if(b.dataset.tab==="dashboard")dashboard();if(b.dataset.tab==="lowStock")$("lowStockTable").innerHTML='<p class="note">Low Stock देखने के लिए Search दबाएँ।</p>';let target=b.dataset.target;if(target){let el=document.querySelector("."+target);if(el)setTimeout(()=>el.scrollIntoView({behavior:"smooth",block:"start"}),80)}else window.scrollTo({top:0,behavior:"smooth"});$("mainMenu").open=false});
-function startApp(user){$("loginScreen").classList.add("hidden");$("app").style.display="block";$("loginMsg").textContent="";if(productsRef)productsRef.off();if(entriesRef)entriesRef.off();if(ordersRef)ordersRef.off();productsRef=db.ref("sagarStock/products");entriesRef=db.ref("sagarStock/entries");ordersRef=db.ref("sagarStock/orders");productsRef.on("value",s=>{syncing=true;products=s.val()||[];syncing=false;refresh()},showError);entriesRef.on("value",s=>{syncing=true;entries=s.val()||[];syncing=false;refresh()},showError);ordersRef.on("value",s=>{let v=s.val()||{};orders=Object.entries(v).map(([id,o])=>({...o,id}));renderOrders()},showError)}
+function startApp(user){$("loginScreen").classList.add("hidden");$("app").style.display="block";$("loginMsg").textContent="";if(productsRef)productsRef.off();if(entriesRef)entriesRef.off();if(ordersRef)ordersRef.off();productsRef=db.ref("sagarStock/products");entriesRef=db.ref("sagarStock/entries");ordersRef=db.ref("sagarStock/orders");productsRef.on("value",s=>{syncing=true;products=normalizeProducts(s.val());syncing=false;refresh()},showError);entriesRef.on("value",s=>{syncing=true;entries=s.val()||[];syncing=false;refresh()},showError);ordersRef.on("value",s=>{let v=s.val()||{};orders=Object.entries(v).map(([id,o])=>({...o,id}));renderOrders()},showError)}
 $("loginBtn").onclick=()=>{let email=$("email").value.trim(),password=$("password").value;if(!email||!password){$("loginMsg").textContent="Email और Password भरें।";return} $("loginBtn").disabled=true;authPersistenceReady.then(()=>auth.signInWithEmailAndPassword(email,password)).catch(e=>{$("loginMsg").textContent="Login नहीं हुआ: "+e.message}).finally(()=>$("loginBtn").disabled=false)};
 $("password").addEventListener("keydown",e=>{if(e.key==="Enter")$("loginBtn").click()});
 $("logoutBtn").onclick=()=>auth.signOut().then(()=>{if(productsRef)productsRef.off();if(entriesRef)entriesRef.off();if(ordersRef)ordersRef.off();$("app").style.display="none";$("loginScreen").classList.remove("hidden");$("password").value="";products=[];entries=[];orders=[]});
