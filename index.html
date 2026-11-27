@@ -390,7 +390,66 @@ let lang=localStorage.getItem('sagarLang')||'hi';const select=document.getElemen
 function apply(){lang=select.value;localStorage.setItem('sagarLang',lang);document.documentElement.lang=lang;const dict=lang==='hi'?hi:en;const pairs=Object.entries(dict).sort((a,b)=>b[0].length-a[0].length);const walk=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while(n=walk.nextNode()){if(n.parentElement.closest('script,style,select option[data-keep],input'))continue;let v=n.nodeValue;for(const [a,b] of pairs)v=v.split(a).join(b);if(v!==n.nodeValue)n.nodeValue=v;}document.querySelectorAll('[placeholder]').forEach(el=>{let v=el.getAttribute('placeholder');for(const [a,b] of pairs)v=v.split(a).join(b);el.setAttribute('placeholder',v)});document.querySelectorAll('label,button,h1,h2,h3,small,p,th').forEach(el=>{if(el.childElementCount===0){let v=el.textContent;for(const [a,b] of pairs)v=v.split(a).join(b);el.textContent=v}});}
 window.applySagarLanguage=apply;select.value=lang;select.addEventListener('change',()=>{apply();});
 // Translate the current screen once; avoid observing every DOM mutation so clicks remain responsive.
+
 apply();
+
+const languageObserver = new MutationObserver(records => {
+  const dict = lang === 'hi' ? hi : en;
+  const pairs = Object.entries(dict).sort((a,b) => b[0].length - a[0].length);
+
+  function translateText(node) {
+    if (!node || !node.nodeValue) return;
+    if (node.parentElement &&
+        node.parentElement.closest('script,style')) return;
+
+    let value = node.nodeValue;
+    for (const [from, to] of pairs) {
+      value = value.split(from).join(to);
+    }
+    if (value !== node.nodeValue) node.nodeValue = value;
+  }
+
+  function translateElement(root) {
+    if (root.nodeType === Node.TEXT_NODE) {
+      translateText(root);
+      return;
+    }
+    if (root.nodeType !== Node.ELEMENT_NODE) return;
+
+    const walker = document.createTreeWalker(
+      root, NodeFilter.SHOW_TEXT
+    );
+    let node;
+    while ((node = walker.nextNode())) translateText(node);
+
+    const elements = [root, ...root.querySelectorAll(
+      '[placeholder], [aria-label], [title]'
+    )];
+
+    for (const el of elements) {
+      for (const attr of ['placeholder','aria-label','title']) {
+        if (!el.hasAttribute(attr)) continue;
+        let value = el.getAttribute(attr);
+        for (const [from, to] of pairs) {
+          value = value.split(from).join(to);
+        }
+        el.setAttribute(attr, value);
+      }
+    }
+  }
+
+  for (const record of records) {
+    for (const node of record.addedNodes) {
+      translateElement(node);
+    }
+  }
+});
+
+languageObserver.observe(document.body, {
+  childList: true,
+  subtree: true
+});
+ 
 })();
 </script>
 <script>
