@@ -228,7 +228,7 @@ $("add").onclick=async()=>{
     });
     $("pn").value=$("ps").value=$("pp").value=$("pmin").value=$("pmax").value="";
     $("itemPhoto").value="";pendingItemPhoto="";$("itemPhotoPreview").src="";$("itemPhotoPreview").classList.add("hidden");
-    alert("Product Firebase में स्थायी रूप से Save हो गया। Refresh करने पर भी रहेगा।");
+
   }catch(err){showError(err)}
   finally{addButton.disabled=false}
 };
@@ -241,7 +241,7 @@ async function entry(t){
   if(t==="o"){let available=bal(p);if(available.total<=0)return alert("LOW STOCK ERROR: इस Product / Size का Stock बिल्कुल नहीं है। पहले Factory से Stock In करें।");if(total>available.total)return alert("LOW STOCK ERROR: मांगी गई Quantity उपलब्ध Stock से ज्यादा है। उपलब्ध Stock: "+available.carton+" Carton और "+available.loose+" Box ("+available.total+" कुल Box)। Stock Out नहीं हुआ।");}
   const entryData={id:Date.now(),type:t==="i"?"in":"out",date:$(t+"date").value,party:t==="i"?"Factory":$("oparty").value,by:$(t+"by").value.trim(),name:p.name,size:p.size,per:p.per,c,l,total};
   const btn=$(t==="i"?"si":"so");btn.disabled=true;
-  try{await appendEntryCloud(entryData);$(t+"c").value=$(t+"l").value=0;alert("Entry Firebase में Save हो गई।")}
+  try{await appendEntryCloud(entryData);$(t+"c").value=$(t+"l").value=0;}
   catch(err){showError(err)}finally{btn.disabled=false}
 }
 $("si").onclick=()=>entry("i");$("so").onclick=()=>entry("o");
@@ -328,7 +328,7 @@ $("shareHistory").onclick=async()=>{let wb=historyWorkbook();if(!wb)return;let b
 $("pdfHistory").onclick=()=>{if(!historySearchDone)return alert("पहले तारीख चुनकर Search करें।");runProfessionalPDF("history","print-history","STOCK ENTRY HISTORY",historyFromDate+" to "+historyToDate+" • Entries: "+filteredHistoryEntries().length)};
 function updateOrderType(){let name=$("ordProduct").value,items=products.filter(p=>p.name===name);$("ordSize").innerHTML=items.map(p=>`<option value="${esc(p.size)}">${esc(p.size)}</option>`).join("");let p=items.find(x=>x.size===$("ordSize").value)||items[0];$("ordInfo").innerHTML=p?`<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">${itemPhotoHTML(p,76)}<div><b>${esc(p.name)}</b><br>Size: ${esc(p.size)}<br>एक Carton में ${p.per} Box | Order Total = Carton × ${p.per} + Loose Box</div></div>`:"Product चुनें"}
 $("ordProduct").onchange=updateOrderType;$("ordSize").onchange=updateOrderType;
-$("saveOrder").onclick=()=>{let p=products.find(p=>p.name===$("ordProduct").value&&p.size===$("ordSize").value),c=Number($("ordCartons").value||0),l=Number($("ordLoose").value||0);if(!p)return alert("पहले Product Master में Product जोड़ें");if(!Number.isInteger(c)||!Number.isInteger(l)||c<0||l<0||(!c&&!l))return alert("Carton और Loose Box Qty सही भरें");let order={date:$("ordDate").value,party:"Factory",by:$("ordBy").value.trim(),name:p.name,size:p.size,per:p.per,c,l,total:c*p.per+l,note:$("ordNote").value.trim(),status:"PENDING",createdAt:Date.now()};db.ref("sagarStock/orders").push(order).then(()=>{$("ordCartons").value=1;$("ordLoose").value=0;$("ordNote").value="";alert("Factory Order Book हो गया।")}).catch(showError)};
+$("saveOrder").onclick=()=>{let p=products.find(p=>p.name===$("ordProduct").value&&p.size===$("ordSize").value),c=Number($("ordCartons").value||0),l=Number($("ordLoose").value||0);if(!p)return alert("पहले Product Master में Product जोड़ें");if(!Number.isInteger(c)||!Number.isInteger(l)||c<0||l<0||(!c&&!l))return alert("Carton और Loose Box Qty सही भरें");let order={date:$("ordDate").value,party:"Factory",by:$("ordBy").value.trim(),name:p.name,size:p.size,per:p.per,c,l,total:c*p.per+l,note:$("ordNote").value.trim(),status:"PENDING",createdAt:Date.now()};db.ref("sagarStock/orders").push(order).then(()=>{$("ordCartons").value=1;$("ordLoose").value=0;$("ordNote").value="";}).catch(showError)};
 let orderStatusFilter="";
 function renderOrders(){
  if(!orderSearchDone){$("orderTable").innerHTML='<p class="note">Order देखने के लिए तारीख चुनकर Search दबाएँ।</p>';$("orderActions").style.display="none";return;}
