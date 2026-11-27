@@ -178,8 +178,6 @@ $("orderSelectedLowStock").onclick=async()=>{
  const chosen=lowStockItems.filter(x=>selectedLowStockKeys.has(lowStockKey(x.p)));
  if(!chosen.length)return alert("पहले Select से Items चुनें या All Items दबाएँ।");
  const lines=chosen.map(x=>({p:x.p,cartons:Math.max(1,Math.ceil(x.min-x.current))}));
- const message=lines.map(x=>x.p.name+" ("+x.p.size+"): "+x.cartons+" Carton").join("\n");
- if(!confirm("चुने हुए "+lines.length+" Items के Factory Orders बनाएँ?\n\n"+message))return;
  const updates={},now=Date.now();
  for(const x of lines){const ref=db.ref("sagarStock/orders").push();updates[ref.key]={date:today,party:"Factory",by:$("ordBy")?.value.trim()||"Dashboard",name:x.p.name,size:x.p.size,per:Number(x.p.per)||1,c:x.cartons,l:0,total:x.cartons*(Number(x.p.per)||1),note:"Auto order: Low Stock",status:"PENDING",createdAt:now};}
  try{
@@ -188,7 +186,6 @@ $("orderSelectedLowStock").onclick=async()=>{
   orders=Object.entries(v).map(([id,o])=>({...o,id}));
   orderStatusFilter="";searchedOrderDate=today;orderSearchDone=true;$("orderSearchDate").value=today;renderOrders();
   activateTab("orderList");$("mainMenu").open=false;
-  alert(lines.length+" चुने हुए Items के Orders बन गए।");
  }catch(e){showError(e);}
 };
 
