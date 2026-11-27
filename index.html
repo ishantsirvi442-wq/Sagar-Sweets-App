@@ -172,8 +172,8 @@ function searchLowStock(){
  renderLowStockTable();
 }
 $("searchLowStock").onclick=searchLowStock;
-$("selectLowStock").onclick=()=>{if(!lowStockItems.length)return alert("पहले Search करें।");lowStockSelectMode=!lowStockSelectMode;if(!lowStockSelectMode)selectedLowStockKeys.clear();renderLowStockTable();};
-$("allLowStock").onclick=()=>{if(!lowStockItems.length)return alert("पहले Search करें।");lowStockSelectMode=true;selectedLowStockKeys=new Set(lowStockItems.map(x=>lowStockKey(x.p)));renderLowStockTable();};
+$("selectLowStock").onclick=()=>{if(!lowStockSearchDone)searchLowStock();if(!lowStockItems.length)return;lowStockSelectMode=!lowStockSelectMode;if(!lowStockSelectMode)selectedLowStockKeys.clear();renderLowStockTable();};
+$("allLowStock").onclick=()=>{if(!lowStockSearchDone)searchLowStock();if(!lowStockItems.length)return;lowStockSelectMode=true;selectedLowStockKeys=new Set(lowStockItems.map(x=>lowStockKey(x.p)));renderLowStockTable();};
 $("orderSelectedLowStock").onclick=async()=>{
  const chosen=lowStockItems.filter(x=>selectedLowStockKeys.has(lowStockKey(x.p)));
  if(!chosen.length)return alert("पहले Select से Items चुनें या All Items दबाएँ।");
