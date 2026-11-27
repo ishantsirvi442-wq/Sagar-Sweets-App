@@ -234,6 +234,7 @@ $("add").onclick=async()=>{
     });
     $("pn").value=$("ps").value=$("pp").value=$("pmin").value=$("pmax").value="";
     $("itemPhoto").value="";$("itemPhotoCamera").value="";pendingItemPhoto="";$("itemPhotoPreview").src="";$("itemPhotoPreview").classList.add("hidden");
+     showToast("Item Saved","Product / Size has been saved successfully.");
 
   }catch(err){showError(err)}
   finally{addButton.disabled=false}
