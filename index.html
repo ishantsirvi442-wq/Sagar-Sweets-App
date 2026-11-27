@@ -386,69 +386,89 @@ Object.assign(en,{
 'एक उत्पाद के कई आकार अलग-अलग जोड़ें। हर आकार में कार्टन के डिब्बों की संख्या अलग रख सकते हैं।':'Add multiple sizes for each product separately. Set a different boxes-per-carton conversion for each size.',
 'शाखा-वार भेजा गया माल':'Branch-wise Stock Out','कुल स्टॉक सारांश':'Total Stock Summary','खोजें':'Search'
 });
-let lang=localStorage.getItem('sagarLang')||'hi';const select=document.getElementById('languageSelect');
-function apply(){lang=select.value;localStorage.setItem('sagarLang',lang);document.documentElement.lang=lang;const dict=lang==='hi'?hi:en;const pairs=Object.entries(dict).sort((a,b)=>b[0].length-a[0].length);const walk=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while(n=walk.nextNode()){if(n.parentElement.closest('script,style,select option[data-keep],input'))continue;let v=n.nodeValue;for(const [a,b] of pairs)v=v.split(a).join(b);if(v!==n.nodeValue)n.nodeValue=v;}document.querySelectorAll('[placeholder]').forEach(el=>{let v=el.getAttribute('placeholder');for(const [a,b] of pairs)v=v.split(a).join(b);el.setAttribute('placeholder',v)});document.querySelectorAll('label,button,h1,h2,h3,small,p,th').forEach(el=>{if(el.childElementCount===0){let v=el.textContent;for(const [a,b] of pairs)v=v.split(a).join(b);el.textContent=v}});}
-window.applySagarLanguage=apply;select.value=lang;select.addEventListener('change',()=>{apply();});
-// Translate the current screen once; avoid observing every DOM mutation so clicks remain responsive.
 
+Object.assign(hi,{
+'Business Inventory Management':'व्यापार स्टॉक प्रबंधन',
+'Sagar Sweets — Business Dashboard':'सागर स्वीट्स — व्यापार डैशबोर्ड',
+'ACTIVE PRODUCTS':'सक्रिय उत्पाद','CLOSING STOCK':'कुल बचा स्टॉक',
+'TODAY STOCK IN':'आज प्राप्त स्टॉक','TODAY STOCK OUT':'आज भेजा स्टॉक',
+'TODAY STOCK प्राप्त':'आज प्राप्त स्टॉक','TODAY STOCK भेजा':'आज भेजा स्टॉक',
+'PENDING ORDERS':'लंबित ऑर्डर','COMPLETED ORDERS':'पूरे हुए ऑर्डर',
+'TODAY ORDERS':'आज के ऑर्डर','TOTAL ENTRIES':'कुल प्रविष्टियाँ',
+'Product / Size':'उत्पाद / आकार','Stock In + Stock Out':'माल प्राप्ति + माल भेजना',
+'Stock और Factory Orders का लाइव सारांश':'स्टॉक और फैक्टरी ऑर्डर का लाइव सारांश',
+'कुल Carton':'कुल कार्टन','कुल Carton प्राप्त':'कुल प्राप्त कार्टन',
+'कुल Carton भेजे':'कुल भेजे गए कार्टन','फैक्टरी से बाकी':'फैक्टरी से बाकी ऑर्डर',
+'आज बनाए गए':'आज बनाए गए ऑर्डर'
+});
+Object.assign(en,{
+'व्यापार स्टॉक प्रबंधन':'Business Inventory Management',
+'सागर स्वीट्स — व्यापार डैशबोर्ड':'Sagar Sweets — Business Dashboard',
+'सक्रिय उत्पाद':'ACTIVE PRODUCTS','कुल बचा स्टॉक':'CLOSING STOCK',
+'आज प्राप्त स्टॉक':'TODAY STOCK IN','आज भेजा स्टॉक':'TODAY STOCK OUT',
+'लंबित ऑर्डर':'PENDING ORDERS','पूरे हुए ऑर्डर':'COMPLETED ORDERS',
+'आज के ऑर्डर':'TODAY ORDERS','कुल प्रविष्टियाँ':'TOTAL ENTRIES',
+'उत्पाद / आकार':'Product / Size','माल प्राप्ति + माल भेजना':'Stock In + Stock Out',
+'स्टॉक और फैक्टरी ऑर्डर का लाइव सारांश':'Stock and Factory Orders live summary',
+'कुल कार्टन':'Total Cartons','कुल प्राप्त कार्टन':'Total Cartons Received',
+'कुल भेजे गए कार्टन':'Total Cartons Sent','फैक्टरी से बाकी ऑर्डर':'Pending with Factory',
+'आज बनाए गए ऑर्डर':'Orders Created Today'
+});
+let lang=localStorage.getItem('sagarLang')||'hi';
+const select=document.getElementById('languageSelect');
+const originalText=new WeakMap();
+const originalAttrs=new WeakMap();
+function makeTranslator(dict){
+ const pairs=Object.entries(dict).sort((a,b)=>b[0].length-a[0].length).map(([from,to])=>{
+  const escaped=from.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  const pattern=/^[A-Za-z0-9_]+$/.test(from)?'\\b'+escaped+'\\b':escaped;
+  return {regex:new RegExp(pattern,'g'),to};
+ });
+ return value=>{let result=value;for(const pair of pairs)result=result.replace(pair.regex,pair.to);return result;};
+}
+function translateTree(root,translator){
+ if(!root)return;
+ const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+ let node;
+ while((node=walker.nextNode())){
+  if(node.parentElement&&node.parentElement.closest('script,style,select,textarea'))continue;
+  if(!originalText.has(node))originalText.set(node,node.nodeValue);
+  const translated=translator(originalText.get(node));
+  if(node.nodeValue!==translated)node.nodeValue=translated;
+ }
+ for(const el of [root,...root.querySelectorAll('[placeholder],[aria-label],[title]')]){
+  let saved=originalAttrs.get(el);
+  if(!saved){saved={};originalAttrs.set(el,saved);}
+  for(const attr of ['placeholder','aria-label','title']){
+   if(!el.hasAttribute(attr))continue;
+   if(!(attr in saved))saved[attr]=el.getAttribute(attr);
+   const translated=translator(saved[attr]);
+   if(el.getAttribute(attr)!==translated)el.setAttribute(attr,translated);
+  }
+ }
+}
+function apply(){
+ lang=select.value||localStorage.getItem('sagarLang')||'hi';
+ localStorage.setItem('sagarLang',lang);
+ document.documentElement.lang=lang;
+ translateTree(document.body,makeTranslator(lang==='hi'?hi:en));
+}
+window.applySagarLanguage=apply;
+select.value=lang;
+select.addEventListener('change',apply);
 apply();
-
-const languageObserver = new MutationObserver(records => {
-  const dict = lang === 'hi' ? hi : en;
-  const pairs = Object.entries(dict).sort((a,b) => b[0].length - a[0].length);
-
-  function translateText(node) {
-    if (!node || !node.nodeValue) return;
-    if (node.parentElement &&
-        node.parentElement.closest('script,style')) return;
-
-    let value = node.nodeValue;
-    for (const [from, to] of pairs) {
-      value = value.split(from).join(to);
-    }
-    if (value !== node.nodeValue) node.nodeValue = value;
-  }
-
-  function translateElement(root) {
-    if (root.nodeType === Node.TEXT_NODE) {
-      translateText(root);
-      return;
-    }
-    if (root.nodeType !== Node.ELEMENT_NODE) return;
-
-    const walker = document.createTreeWalker(
-      root, NodeFilter.SHOW_TEXT
-    );
-    let node;
-    while ((node = walker.nextNode())) translateText(node);
-
-    const elements = [root, ...root.querySelectorAll(
-      '[placeholder], [aria-label], [title]'
-    )];
-
-    for (const el of elements) {
-      for (const attr of ['placeholder','aria-label','title']) {
-        if (!el.hasAttribute(attr)) continue;
-        let value = el.getAttribute(attr);
-        for (const [from, to] of pairs) {
-          value = value.split(from).join(to);
-        }
-        el.setAttribute(attr, value);
-      }
-    }
-  }
-
-  for (const record of records) {
-    for (const node of record.addedNodes) {
-      translateElement(node);
-    }
-  }
+const languageObserver=new MutationObserver(records=>{
+ const translator=makeTranslator(lang==='hi'?hi:en);
+ for(const record of records)for(const node of record.addedNodes){
+  if(node.nodeType===Node.TEXT_NODE){
+   if(!originalText.has(node))originalText.set(node,node.nodeValue);
+   const translated=translator(originalText.get(node));
+   if(node.nodeValue!==translated)node.nodeValue=translated;
+  }else if(node.nodeType===Node.ELEMENT_NODE)translateTree(node,translator);
+ }
 });
+languageObserver.observe(document.body,{childList:true,subtree:true});
 
-languageObserver.observe(document.body, {
-  childList: true,
-  subtree: true
-});
  
 })();
 </script>
