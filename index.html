@@ -388,6 +388,24 @@ Object.assign(en,{
 });
 
 Object.assign(hi,{
+'Dashboard':'डैशबोर्ड','Factory':'फैक्टरी','CLOSING STOCK':'कुल बचा स्टॉक',
+'ACTIVE PRODUCTS':'सक्रिय उत्पाद','TODAY STOCK IN':'आज प्राप्त स्टॉक',
+'TODAY STOCK OUT':'आज भेजा स्टॉक','PENDING ORDERS':'लंबित ऑर्डर',
+'COMPLETED ORDERS':'पूरे हुए ऑर्डर','TODAY ORDERS':'आज के ऑर्डर',
+'TOTAL ENTRIES':'कुल प्रविष्टियाँ','Product / Size':'उत्पाद / आकार',
+'कुल Carton IN':'कुल प्राप्त कार्टन','कुल Carton भेजे':'कुल भेजे गए कार्टन',
+'Factory से बाकी':'फैक्टरी से बाकी ऑर्डर','Stock In + Stock Out':'माल प्राप्ति + माल भेजना'
+});
+Object.assign(en,{
+'डैशबोर्ड':'Dashboard','फैक्टरी':'Factory','सक्रिय उत्पाद':'ACTIVE PRODUCTS',
+'कुल बचा स्टॉक':'CLOSING STOCK','आज प्राप्त स्टॉक':'TODAY STOCK IN',
+'आज भेजा स्टॉक':'TODAY STOCK OUT','लंबित ऑर्डर':'PENDING ORDERS',
+'पूरे हुए ऑर्डर':'COMPLETED ORDERS','आज के ऑर्डर':'TODAY ORDERS',
+'कुल प्रविष्टियाँ':'TOTAL ENTRIES','कुल प्राप्त कार्टन':'Total Cartons IN',
+'कुल भेजे गए कार्टन':'Total Cartons Sent','फैक्टरी से बाकी ऑर्डर':'Pending with Factory',
+'माल प्राप्ति + माल भेजना':'Stock In + Stock Out'
+});
+Object.assign(hi,{
 'Business Inventory Management':'व्यापार स्टॉक प्रबंधन',
 'Sagar Sweets — Business Dashboard':'सागर स्वीट्स — व्यापार डैशबोर्ड',
 'ACTIVE PRODUCTS':'सक्रिय उत्पाद','CLOSING STOCK':'कुल बचा स्टॉक',
@@ -421,7 +439,8 @@ const originalAttrs=new WeakMap();
 function makeTranslator(dict){
  const pairs=Object.entries(dict).sort((a,b)=>b[0].length-a[0].length).map(([from,to])=>{
   const escaped=from.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-  const pattern=/^[A-Za-z0-9_]+$/.test(from)?'\\b'+escaped+'\\b':escaped;
+  const flexible=escaped.replace(/\\\\ /g,'\\\\s+');
+  const pattern=/^[A-Za-z0-9_]+$/.test(from)?'\\\\b'+flexible+'\\\\b':flexible;
   return {regex:new RegExp(pattern,'g'),to};
  });
  return value=>{let result=value;for(const pair of pairs)result=result.replace(pair.regex,pair.to);return result;};
