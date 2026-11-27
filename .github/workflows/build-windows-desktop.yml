@@ -1,0 +1,35 @@
+name: Build Windows Desktop App
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "desktop/**"
+      - ".github/workflows/build-windows-desktop.yml"
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package.json
+      - name: Install dependencies
+        run: npm install
+      - name: Build Windows installer
+        run: npm run dist
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sagar-Sweets-Windows-Installer
+          path: desktop/dist/*.exe
+          if-no-files-found: error
+          retention-days: 30
