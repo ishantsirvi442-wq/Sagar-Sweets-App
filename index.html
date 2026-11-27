@@ -439,7 +439,7 @@ const originalAttrs=new WeakMap();
 function makeTranslator(dict){
  const pairs=Object.entries(dict).sort((a,b)=>b[0].length-a[0].length).map(([from,to])=>{
   const escaped=from.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-  const flexible=escaped.replace(/\\\\ /g,'\\\\s+');
+  const flexible=escaped.replace(/ /g,'\\s+');
   const pattern=/^[A-Za-z0-9_]+$/.test(from)?'\\\\b'+flexible+'\\\\b':flexible;
   return {regex:new RegExp(pattern,'g'),to};
  });
