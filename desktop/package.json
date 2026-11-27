@@ -1,0 +1,44 @@
+{
+  "name": "sagar-sweets-desktop",
+  "version": "1.0.0",
+  "description": "Sagar Sweets Business Inventory Management Desktop App",
+  "main": "main.js",
+  "author": "Sagar Sweets",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "^39.2.7",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "in.sagarsweets.inventory",
+    "productName": "Sagar Sweets",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Sagar Sweets"
+    }
+  }
+}
