@@ -76,6 +76,7 @@ table{border-collapse:collapse;width:100%;min-width:620px}td,th{padding:10px;bor
  <div class="stat-grid">
   <div class="stat-card"><div class="stat-label">ACTIVE PRODUCTS</div><div class="stat-value" id="dProducts">0</div><div class="stat-sub">Product / Size</div></div>
   <div class="stat-card"><div class="stat-label">CLOSING STOCK</div><div class="stat-value" id="dStock">0</div><div class="stat-sub">कुल Carton</div></div>
+  <div class="stat-card"><div class="stat-label">LOW STOCK ITEMS</div><div class="stat-value" id="dLowStock">0</div><div class="stat-sub">Items below minimum level</div></div>
   <div class="stat-card"><div class="stat-label">TODAY STOCK IN</div><div class="stat-value" id="dIn">0</div><div class="stat-sub">कुल Carton प्राप्त</div></div>
   <div class="stat-card"><div class="stat-label">TODAY STOCK OUT</div><div class="stat-value" id="dOut">0</div><div class="stat-sub">कुल Carton भेजे</div></div>
   <div class="stat-card"><div class="stat-label">PENDING ORDERS</div><div class="stat-value" id="dPending">0</div><div class="stat-sub">फैक्टरी से बाकी</div></div>
@@ -246,9 +247,10 @@ function dashboard(){
  const pending=orders.filter(o=>(o.status||"PENDING")==="PENDING").length;
  const completed=orders.filter(o=>o.status==="COMPLETED").length;
  const todayOrders=orders.filter(o=>(o.date||"")===today).length;
+ const lowStockCount=active.filter(p=>{const min=Number(p.minStock)||0;return min>0&&stockCartons(p)<min;}).length;
  const put=(id,v)=>{const el=$(id);if(el)el.textContent=Number(v||0).toLocaleString("en-IN")};
  const cartonText=v=>Number(v||0).toLocaleString("en-IN",{maximumFractionDigits:2});
- put("dProducts",active.length);$("dStock").textContent=cartonText(totalStock);$("dIn").textContent=cartonText(todayIn);$("dOut").textContent=cartonText(todayOut);put("dPending",pending);put("dCompleted",completed);put("dTodayOrders",todayOrders);put("dEntries",entries.length);
+ put("dProducts",active.length);put("dLowStock",lowStockCount);$("dStock").textContent=cartonText(totalStock);$("dIn").textContent=cartonText(todayIn);$("dOut").textContent=cartonText(todayOut);put("dPending",pending);put("dCompleted",completed);put("dTodayOrders",todayOrders);put("dEntries",entries.length);
  $("dashDate").textContent=new Date().toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"});
  const branchSummaryEl=$("dashBranches");
  if(branchSummaryEl){branchSummaryEl.innerHTML=`<table><tr><th>Branch</th><th>Carton</th><th>Loose Box</th><th>Total Box</th></tr>${branches.map(b=>{let es=entries.filter(e=>e.type==="out"&&e.party===b);let cartons=es.reduce((n,e)=>n+(Number(e.c)||0),0),loose=es.reduce((n,e)=>n+(Number(e.l)||0),0),total=es.reduce((n,e)=>n+(Number(e.total)||0),0);return `<tr><td><b>${esc(b)}</b></td><td>${cartons}</td><td>${loose}</td><td><b>${total}</b></td></tr>`}).join("")}</table>`;}
@@ -432,6 +434,8 @@ Object.assign(en,{
 'कुल भेजे गए कार्टन':'Total Cartons Sent','फैक्टरी से बाकी ऑर्डर':'Pending with Factory',
 'आज बनाए गए ऑर्डर':'Orders Created Today'
 });
+Object.assign(hi,{'LOW STOCK ITEMS':'कम स्टॉक वाले आइटम','Items below minimum level':'Minimum से कम स्टॉक'});
+Object.assign(en,{'कम स्टॉक वाले आइटम':'LOW STOCK ITEMS','Minimum से कम स्टॉक':'Items below minimum level'});
 let lang=localStorage.getItem('sagarLang')||'hi';
 const select=document.getElementById('languageSelect');
 const originalText=new WeakMap();
