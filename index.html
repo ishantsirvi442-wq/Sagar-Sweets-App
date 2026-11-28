@@ -113,7 +113,7 @@ const auth=firebase.auth(),db=firebase.database();
 // Wait until Firebase has applied LOCAL persistence before restoring or creating a session.
 const authPersistenceReady = auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 const branches=["ASHOKA MARG","GANGAPUR","TAPOVAN","GOVIND NAGAR","COLLEGE ROAD"],$=x=>document.getElementById(x);
-let products=[],entries=[],orders=[],syncing=false,productsRef=null,entriesRef=null,ordersRef=null;
+let products=[],entries=[],orders=[],syncing=false,productsRef=null,entriesRef=null,ordersRef=null,productsLoaded=false,entriesLoaded=false,autoOrderCleanupTimer=0,autoOrderCleanupRunning=false;
 let searchedOrderDate="",orderSearchDone=false;
 let historySearchDone=false,historyFromDate="",historyToDate="";
 function localDateString(d=new Date()){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");return `${y}-${m}-${day}`;}
@@ -345,9 +345,29 @@ function renderOrders(){
  $("orderListHeading").textContent=orderStatusFilter==="PENDING"?"Pending Orders":orderStatusFilter==="COMPLETED"?"Completed Orders":orderStatusFilter?"All Orders": "Order List";
  if(!dayOrders.length){$("orderTable").innerHTML='<p class="note">इस तारीख का कोई Order नहीं मिला।</p>';$("orderActions").style.display="none";return;}
  $("orderActions").style.display="flex";
- $("orderTable").innerHTML=`<table><tr><th class="no-print"><input type="checkbox" id="selectAllOrders" aria-label="सभी चुनें"></th><th>Date</th><th>Photo / Product / Size</th><th>Carton</th><th>Loose Box</th><th>Total Box</th><th>Note</th><th>Status</th><th class="no-print">Action</th></tr>${dayOrders.map(o=>`<tr><td class="no-print"><input type="checkbox" class="order-check" value="${esc(o.id)}"></td><td>${esc(o.date||"")}</td><td><div style="display:flex;align-items:center;gap:8px">${itemPhotoHTML(products.find(p=>p.name===o.name&&p.size===o.size),42)}<div>${esc(o.name)}<br>${esc(o.size)}</div></div></td><td>${o.c||0}</td><td>${o.l||0}</td><td>${o.total||0}</td><td>${esc(o.note||"-")}</td><td><span class="pill">${esc(o.status||"PENDING")}</span></td><td class="no-print">${(o.status||"PENDING")==="PENDING"?`<button type="button" onclick="completeOrder('${esc(o.id)}')">Mark Completed</button>`:`<span>Completed</span>`}</td></tr>`).join("")}</table>`;
+ $("orderTable").innerHTML=`<table><tr><th class="no-print"><input type="checkbox" id="selectAllOrders" aria-label="सभी चुनें"></th><th>Date</th><th>Photo / Product / Size</th><th>Carton</th><th>Loose Box</th><th>Total Box</th><th>Note</th><th>Status</th><th class="no-print">Action</th></tr>${dayOrders.map(o=>{const status=o.status||"PENDING";return `<tr><td class="no-print"><input type="checkbox" class="order-check" value="${esc(o.id)}"></td><td>${esc(o.date||"")}</td><td><div style="display:flex;align-items:center;gap:8px">${itemPhotoHTML(products.find(p=>p.name===o.name&&p.size===o.size),42)}<div>${esc(o.name)}<br>${esc(o.size)}</div></div></td><td>${o.c||0}</td><td>${o.l||0}</td><td>${o.total||0}</td><td>${esc(o.note||"-")}</td><td><span class="pill">${esc(status==="CANCELLED"?"CANCELLED":status)}</span></td><td class="no-print">${status==="PENDING"?`<button type="button" onclick="completeOrder('${esc(o.id)}')">Mark Completed</button>`:status==="CANCELLED"?`<span>Auto Cancelled</span>`:`<span>Completed</span>`}</td></tr>`}).join("")}</table>`;
  const all=$("selectAllOrders");if(all)all.onchange=()=>document.querySelectorAll(".order-check").forEach(c=>c.checked=all.checked);
  if(window.applySagarLanguage)window.applySagarLanguage();
+}
+function scheduleAutoLowStockOrderCleanup(){
+ if(!productsLoaded||!entriesLoaded||autoOrderCleanupRunning)return;
+ clearTimeout(autoOrderCleanupTimer);
+ autoOrderCleanupTimer=setTimeout(async()=>{
+  if(autoOrderCleanupRunning)return;
+  autoOrderCleanupRunning=true;
+  try{
+   const updates={},now=Date.now();
+   for(const o of orders){
+    if((o.status||"PENDING")!=="PENDING"||!String(o.note||"").startsWith("Auto order: Low Stock"))continue;
+    const p=products.find(x=>!x.archived&&normText(x.name)===normText(o.name)&&normText(x.size)===normText(o.size));
+    if(!p)continue;
+    const min=Number(p.minStock)||0;
+    if(min>0&&stockCartons(p)>=min){updates[o.id]={status:"CANCELLED",cancelledAt:now,cancelReason:"Stock minimum level reached"};}
+   }
+   if(Object.keys(updates).length)await db.ref("sagarStock/orders").update(updates);
+  }catch(e){console.warn("Auto low-stock order cleanup failed:",e)}
+  finally{autoOrderCleanupRunning=false}
+ },300);
 }
 function completeOrder(id){let o=orders.find(x=>x.id===id);if(!o||o.status==="COMPLETED")return;if(!confirm("क्या फैक्ट्री से इस Order का पूरा माल मिल गया है? Status COMPLETED कर दें?"))return;db.ref("sagarStock/orders/"+id).update({status:"COMPLETED",completedAt:Date.now()}).then(()=>alert("Order COMPLETED हो गया। रिकॉर्ड सुरक्षित है।")).catch(showError)}
 window.completeOrder=completeOrder;
@@ -406,7 +426,7 @@ document.querySelectorAll("#dashboard .stat-card[data-open-tab]").forEach(card=>
  card.addEventListener("click",open);
  card.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open();}});
 });
-function startApp(user){$("loginScreen").classList.add("hidden");$("app").style.display="block";$("loginMsg").textContent="";activateTab("dashboard",false);if(productsRef)productsRef.off();if(entriesRef)entriesRef.off();if(ordersRef)ordersRef.off();productsRef=db.ref("sagarStock/products");entriesRef=db.ref("sagarStock/entries");ordersRef=db.ref("sagarStock/orders");productsRef.on("value",s=>{syncing=true;products=normalizeProducts(s.val());syncing=false;refresh()},showError);entriesRef.on("value",s=>{syncing=true;entries=s.val()||[];syncing=false;refresh()},showError);ordersRef.on("value",s=>{let v=s.val()||{};orders=Object.entries(v).map(([id,o])=>({...o,id}));renderOrders();dashboard()},showError);runDailyCloudBackup()}
+function startApp(user){$("loginScreen").classList.add("hidden");$("app").style.display="block";$("loginMsg").textContent="";activateTab("dashboard",false);if(productsRef)productsRef.off();if(entriesRef)entriesRef.off();if(ordersRef)ordersRef.off();productsRef=db.ref("sagarStock/products");entriesRef=db.ref("sagarStock/entries");ordersRef=db.ref("sagarStock/orders");productsRef.on("value",s=>{syncing=true;products=normalizeProducts(s.val());syncing=false;productsLoaded=true;refresh();scheduleAutoLowStockOrderCleanup()},showError);entriesRef.on("value",s=>{syncing=true;entries=s.val()||[];syncing=false;entriesLoaded=true;refresh();scheduleAutoLowStockOrderCleanup()},showError);ordersRef.on("value",s=>{let v=s.val()||{};orders=Object.entries(v).map(([id,o])=>({...o,id}));renderOrders();dashboard();scheduleAutoLowStockOrderCleanup()},showError);runDailyCloudBackup()}
 $("loginBtn").onclick=()=>{let email=$("email").value.trim(),password=$("password").value;if(!email||!password){$("loginMsg").textContent="Email और Password भरें।";return} $("loginBtn").disabled=true;authPersistenceReady.then(()=>auth.signInWithEmailAndPassword(email,password)).catch(e=>{$("loginMsg").textContent="Login नहीं हुआ: "+e.message}).finally(()=>$("loginBtn").disabled=false)};
 $("password").addEventListener("keydown",e=>{if(e.key==="Enter")$("loginBtn").click()});
 $("logoutBtn").onclick=()=>auth.signOut().then(()=>{try{localStorage.removeItem(LAST_TAB_KEY)}catch(e){}if(productsRef)productsRef.off();if(entriesRef)entriesRef.off();if(ordersRef)ordersRef.off();$("app").style.display="none";$("loginScreen").classList.remove("hidden");$("password").value="";products=[];entries=[];orders=[]});
