@@ -1,10 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-<g fill="#d31319" stroke="#fff" stroke-width="10" stroke-linejoin="round">
-<path d="M512 65 C550 118 625 105 642 154 C703 143 742 183 733 245 C787 275 787 340 752 382 C787 430 764 490 714 511 C735 574 693 619 633 615 C608 666 556 664 512 704 C468 664 416 666 391 615 C331 619 289 574 310 511 C260 490 237 430 272 382 C237 340 237 275 291 245 C282 183 321 143 382 154 C399 105 474 118 512 65Z"/>
-<circle cx="512" cy="56" r="17"/><circle cx="250" cy="382" r="15"/><circle cx="774" cy="382" r="15"/><circle cx="512" cy="715" r="15"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1000">
+<g fill="#c91620" stroke="#fff" stroke-width="9" stroke-linejoin="round">
+<path d="M600 35 C650 92 737 77 759 134 C828 122 875 167 863 238 C923 274 923 345 881 393 C922 448 894 518 832 539 C856 614 805 665 733 658 C702 721 638 718 600 765 C562 718 498 721 467 658 C395 665 344 614 368 539 C306 518 278 448 319 393 C277 345 277 274 337 238 C325 167 372 122 441 134 C463 77 550 92 600 35Z"/>
+<circle cx="600" cy="28" r="16"/><circle cx="292" cy="393" r="14"/><circle cx="908" cy="393" r="14"/><circle cx="600" cy="779" r="14"/>
 </g>
-<text x="512" y="475" text-anchor="middle" fill="#fff" font-family="Georgia,serif" font-size="330">S</text>
-<text x="500" y="800" text-anchor="middle" fill="#d31319" stroke="#fff" stroke-width="5" paint-order="stroke" font-family="Georgia,serif" font-size="170" letter-spacing="5">SAGAR</text>
-<text x="512" y="905" text-anchor="middle" fill="#d31319" stroke="#fff" stroke-width="4" paint-order="stroke" font-family="Georgia,serif" font-size="86" font-weight="bold" letter-spacing="10">SWEETS</text>
-<text x="846" y="630" fill="#111" font-family="Arial,sans-serif" font-size="58">®</text>
+<text x="600" y="470" text-anchor="middle" fill="#fff" font-family="Georgia, 'Times New Roman', serif" font-size="330" font-style="italic">S</text>
+<path d="M490 380 C430 445 470 555 580 560 C685 566 735 478 690 420 C650 370 570 400 575 455 C580 495 635 505 653 470" fill="none" stroke="#fff" stroke-width="17" stroke-linecap="round"/>
+<text x="600" y="850" text-anchor="middle" fill="#c91620" stroke="#fff" stroke-width="5" paint-order="stroke" font-family="Georgia, 'Times New Roman', serif" font-size="190" letter-spacing="9">SAGAR</text>
+<text x="600" y="965" text-anchor="middle" fill="#c91620" stroke="#fff" stroke-width="4" paint-order="stroke" font-family="Georgia, 'Times New Roman', serif" font-size="100" font-weight="bold" letter-spacing="22">SWEETS</text>
+<text x="1015" y="735" fill="#111" font-family="Arial,sans-serif" font-size="60">®</text>
 </svg>
