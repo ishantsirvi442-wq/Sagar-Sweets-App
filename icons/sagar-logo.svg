@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+<rect width="1024" height="1024" fill="#00e600"/>
+<g fill="#d31319" stroke="#fff" stroke-width="10" stroke-linejoin="round">
+<path d="M512 65 C550 118 625 105 642 154 C703 143 742 183 733 245 C787 275 787 340 752 382 C787 430 764 490 714 511 C735 574 693 619 633 615 C608 666 556 664 512 704 C468 664 416 666 391 615 C331 619 289 574 310 511 C260 490 237 430 272 382 C237 340 237 275 291 245 C282 183 321 143 382 154 C399 105 474 118 512 65Z"/>
+<circle cx="512" cy="56" r="17"/><circle cx="250" cy="382" r="15"/><circle cx="774" cy="382" r="15"/><circle cx="512" cy="715" r="15"/>
+</g>
+<text x="512" y="475" text-anchor="middle" fill="#fff" font-family="Georgia,serif" font-size="330">S</text>
+<text x="500" y="800" text-anchor="middle" fill="#d31319" stroke="#fff" stroke-width="5" paint-order="stroke" font-family="Georgia,serif" font-size="170" letter-spacing="5">SAGAR</text>
+<text x="512" y="905" text-anchor="middle" fill="#d31319" stroke="#fff" stroke-width="4" paint-order="stroke" font-family="Georgia,serif" font-size="86" font-weight="bold" letter-spacing="10">SWEETS</text>
+<text x="846" y="630" fill="#111" font-family="Arial,sans-serif" font-size="58">®</text>
+</svg>
